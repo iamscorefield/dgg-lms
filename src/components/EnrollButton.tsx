@@ -81,9 +81,11 @@ export function EnrollButton({ courseId, isFree }: EnrollButtonProps) {
         return;
       }
 
+      const userEmail = session.user.email ?? "no-email@placeholder.com";
+
       const handler = window.PaystackPop.setup({
         key: publicKey,
-        email: session.user.email,
+        email: userEmail,
         amount: price * 100, // NGN → kobo, same as CourseGrid
         currency: "NGN",
         reference: new Date().getTime().toString(),
@@ -93,8 +95,9 @@ export function EnrollButton({ courseId, isFree }: EnrollButtonProps) {
           training_type: "dashboard_course",
         },
         callback: () => {
-          toast.success("Payment successful! You now have access to this course.");
-          // stay or redirect, your choice:
+          toast.success(
+            "Payment successful! You now have access to this course."
+          );
           // window.location.href = "/dashboard/my-courses";
         },
         onClose: () => {
