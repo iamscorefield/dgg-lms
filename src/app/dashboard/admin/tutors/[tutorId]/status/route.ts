@@ -1,48 +1,41 @@
-// src/app/dashboard/admin/tutors/[tutorId]/status/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { createServer } from "@/lib/supabase-server";
 
+type RouteParams = {
+  tutorId: string;
+};
+
 export async function POST(
-  req: NextRequest,
-  { params }: { params: { tutorId: string } }
+  request: NextRequest,
+  context: { params: Promise<RouteParams> }
 ) {
+  const params = await context.params;
+  const { tutorId } = params;
+
   const supabase = await createServer();
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  const body = await request.json();
+  const { new_status } = body as { new_status: string };
 
-  if (!session) {
-    return NextResponse.redirect(new URL("/login", req.url));
+  if (!new_status) {
+    return NextResponse.json(
+      { error: "Missing new_status" },
+      { status: 400 }
+    );
   }
 
-  const { data: currentProfile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", session.user.id)
-    .single();
+  const { error } = await supabase
+    .from("tutors")
+    .update({ status: new_status })
+    .eq("id", tutorId);
 
-  if (currentProfile?.role !== "admin") {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+  if (error) {
+    console.error("Error updating tutor status:", error);
+    return NextResponse.json(
+      { error: "Failed to update status" },
+      { status: 500 }
+    );
   }
 
-  const formData = await req.formData();
-  const status = formData.get("status") as
-    | "active"
-    | "disabled"
-    | "under_review"
-    | null;
-  const returnTo =
-    (formData.get("returnTo") as string) || "/dashboard/admin/tutors";
-
-  if (!status) {
-    return NextResponse.redirect(new URL(returnTo, req.url));
-  }
-
-  await supabase
-    .from("profiles")
-    .update({ status })
-    .eq("id", params.tutorId);
-
-  return NextResponse.redirect(new URL(returnTo, req.url));
+  return NextResponse.json({ success: true });
 }
