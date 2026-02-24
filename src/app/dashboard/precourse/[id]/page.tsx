@@ -137,8 +137,8 @@ export default async function PreCourseDetailPage(
                 {course.full_description ? (
                   course.full_description
                     .split("\n")
-                    .filter((p) => p.trim().length > 0)
-                    .map((p, idx) => <p key={idx}>{p}</p>)
+                    .filter((p: string) => p.trim().length > 0)
+                    .map((p: string, idx: number) => <p key={idx}>{p}</p>)
                 ) : (
                   <p>
                     The full description for this prep course is coming soon.
