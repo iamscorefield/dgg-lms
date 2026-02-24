@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Light mode */
+  --background: #ffffff;      /* keep page background white */
+  --foreground: #512d7c;      /* primary dark purple text */
 }
 
 @theme inline {
@@ -12,10 +13,11 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Optional dark mode – using your brand colors */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #1b102b;    /* very dark purple background */
+    --foreground: #f2b42c;    /* accent gold text */
   }
 }
 
