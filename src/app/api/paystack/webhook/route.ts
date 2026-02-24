@@ -1,15 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createServer } from "@/lib/supabase-server";
 import crypto from "crypto";
 
-export async function POST(req: Request) {
+export const dynamic = "force-dynamic";
+
+export async function POST(req: NextRequest) {
   // Read raw body for Paystack signature check
   const body = await req.text();
   const signature = req.headers.get("x-paystack-signature") || "";
 
   // Verify Paystack signature
+  const secret = process.env.PAYSTACK_SECRET_KEY || "";
   const hash = crypto
-    .createHmac("sha512", process.env.PAYSTACK_SECRET_KEY || "")
+    .createHmac("sha512", secret)
     .update(body)
     .digest("hex");
 
@@ -17,7 +20,12 @@ export async function POST(req: Request) {
     return new NextResponse("Invalid signature", { status: 400 });
   }
 
-  const event = JSON.parse(body);
+  let event: any;
+  try {
+    event = JSON.parse(body);
+  } catch {
+    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+  }
 
   // Only handle successful charges
   if (event.event === "charge.success") {
@@ -26,13 +34,14 @@ export async function POST(req: Request) {
     const reference = event.data.reference;
 
     if (!user_id || !course_id) {
-      return NextResponse.json({ error: "Missing metadata" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing metadata" },
+        { status: 400 }
+      );
     }
 
-    // Service-role Supabase client (for server-side updates)
-    const supabase = createServerClient({
-      supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    });
+    // Use your standard Supabase server client
+    const supabase = await createServer();
 
     // Get course price to confirm amount
     const { data: course, error: courseError } = await supabase
@@ -42,13 +51,19 @@ export async function POST(req: Request) {
       .single();
 
     if (!course || courseError) {
-      return NextResponse.json({ error: "Course not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Course not found" },
+        { status: 404 }
+      );
     }
 
     // Compare amount in kobo
     const expectedAmountKobo = Number(course.price || 0) * 100;
     if (amountKobo !== expectedAmountKobo) {
-      return NextResponse.json({ error: "Amount mismatch" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Amount mismatch" },
+        { status: 400 }
+      );
     }
 
     // Update enrollment: mark as paid and set enrolled_at
@@ -64,7 +79,5 @@ export async function POST(req: Request) {
       .eq("payment_status", "pending");
   }
 
-  return NextResponse.json({ received: true });
+  return NextResponse.json({ received: true }, { status: 200 });
 }
-
-export const dynamic = "force-dynamic";
