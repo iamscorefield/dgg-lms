@@ -157,9 +157,10 @@ export default function LearningModulePage() {
         const { data: lessonsData, error: lessonsError } = await supabase
           .from("module_lessons")
           .select("*")
-          .eq("module_id", Number(moduleId))
+          .eq("module_id", moduleId) // moduleId is a UUID string
           .order("sort_order", { ascending: true });
         if (lessonsError) {
+          console.error("Lessons error:", lessonsError);
           throw new Error("Could not load lessons.");
         }
         setLessons((lessonsData || []) as Lesson[]);
@@ -169,7 +170,7 @@ export default function LearningModulePage() {
           await supabase
             .from("module_assessments")
             .select("*")
-            .eq("module_id", Number(moduleId))
+            .eq("module_id", moduleId) // moduleId is a UUID string
             .order("sort_order", { ascending: true });
         if (assessmentsError) {
           throw new Error("Could not load assessments.");
@@ -181,7 +182,7 @@ export default function LearningModulePage() {
           .from("user_module_progress")
           .select("*")
           .eq("user_id", user.id)
-          .eq("module_id", Number(moduleId))
+          .eq("module_id", moduleId) // moduleId is a UUID string
           .maybeSingle();
 
         if (progressError && progressError.code !== "PGRST116") {
@@ -193,7 +194,7 @@ export default function LearningModulePage() {
             .from("user_module_progress")
             .insert({
               user_id: user.id,
-              module_id: Number(moduleId),
+              module_id: moduleId,
               current_lesson_index: 0,
               current_assessment_index: 0,
               lessons_completed: false,
