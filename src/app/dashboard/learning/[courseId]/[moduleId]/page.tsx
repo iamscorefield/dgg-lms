@@ -146,7 +146,7 @@ export default function LearningModulePage() {
         const { data: moduleData, error: moduleError } = await supabase
           .from("course_modules")
           .select("id, title, course_id")
-          .eq("id", Number(moduleId))
+          .eq("id", moduleId) // moduleId is a UUID string
           .single();
         if (moduleError || !moduleData) {
           throw new Error("Module not found.");

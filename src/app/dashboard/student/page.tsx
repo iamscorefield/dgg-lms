@@ -70,7 +70,7 @@ export default async function StudentDashboard() {
         {/* Prep Resources Kit – moved up */}
         <div className="mb-12">
           <h2 className="text-3xl font-bold text-[#512d7c] mb-4">
-            Are you a Newbie? Let's help your navigation...
+            Are you a Newbie? Start with prep courses...
           </h2>
           <div className="bg-white p-8 rounded-2xl shadow">
             <p className="text-lg text-gray-800">
