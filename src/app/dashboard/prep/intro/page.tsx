@@ -30,7 +30,7 @@ export default function PrepIntroPage() {
         return;
       }
 
-      const amount = 30000;
+      const amount = 50000;
       const handler = (window as any).PaystackPop.setup({
         key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
         email,
@@ -103,7 +103,7 @@ export default function PrepIntroPage() {
               </h2>
               <p className="text-xs text-gray-700 mb-3">
                 With a one‑time payment of{" "}
-                <span className="font-semibold">30,000</span>, you become a DGG
+                <span className="font-semibold">50,000</span>, you become a DGG
                 Student and unlock access to our full prep program and
                 supporting resources.
               </p>
@@ -121,7 +121,7 @@ export default function PrepIntroPage() {
                 >
                   {loading
                     ? "Starting payment..."
-                    : "Pay 30,000 to become a DGG Student"}
+                    : "Pay 50,000 to become a DGG Student"}
                 </button>
                 <p className="text-[11px] text-gray-500">
                   One-time payment. No expiry. You keep access to the prep
@@ -157,7 +157,7 @@ export default function PrepIntroPage() {
                   Become a DGG Student
                 </p>
                 <p>
-                  Pay 30,000 once to unlock the full prep bundle and premium
+                  Pay 50,000 once to unlock the full prep bundle and premium
                   student features.
                 </p>
               </div>
@@ -205,7 +205,7 @@ export default function PrepIntroPage() {
             >
               {loading
                 ? "Starting payment..."
-                : "Become a DGG Student (30,000)"}
+                : "Become a DGG Student (50,000)"}
             </button>
           </section>
         </div>
