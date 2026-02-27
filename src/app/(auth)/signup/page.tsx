@@ -15,7 +15,7 @@ export default function SignupPage() {
   const handleOAuthSignup = async () => {
     const redirectTo =
       typeof window !== "undefined"
-        ? `${window.location.origin}/dashboard`
+        ? `${window.location.origin}/auth/callback`
         : undefined;
 
     await supabase.auth.signInWithOAuth({
@@ -41,7 +41,6 @@ export default function SignupPage() {
       {/* Right - Form */}
       <div className="w-full lg:w-1/2 bg-white flex items-center justify-center px-6 sm:px-8 py-12 lg:py-24">
         <div className="max-w-md w-full space-y-8">
-          {/* Icon + switch link + title */}
           <div className="text-center space-y-4 mt-6 lg:mt-10">
             <div className="flex items-center justify-center gap-3 mb-2">
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#f2b42c] text-[#512d7c] font-bold">
@@ -63,9 +62,7 @@ export default function SignupPage() {
             </h2>
           </div>
 
-          {/* Social / Email options */}
           <div className="space-y-4">
-            {/* Google only */}
             <button
               type="button"
               onClick={handleOAuthSignup}
@@ -77,7 +74,6 @@ export default function SignupPage() {
               </span>
             </button>
 
-            {/* Scroll to email form */}
             <button
               type="button"
               onClick={handleScrollToForm}
@@ -92,7 +88,6 @@ export default function SignupPage() {
 
           <div className="text-center text-black my-4">or</div>
 
-          {/* Email form section */}
           <div id="signup-form">
             <SignupForm />
           </div>
