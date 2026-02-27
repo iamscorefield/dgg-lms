@@ -1,11 +1,15 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import SignupForm from "@/components/auth/SignupForm";
 import { createBrowser } from "@/lib/supabase-client";
 
 export default function SignupPage() {
   const supabase = createBrowser();
+  const router = useRouter();
+  const [checkingSession, setCheckingSession] = useState(true);
 
   const handleScrollToForm = () => {
     const el = document.getElementById("signup-form");
@@ -24,6 +28,26 @@ export default function SignupPage() {
     });
   };
 
+  useEffect(() => {
+    async function checkUser() {
+      const { data, error } = await supabase.auth.getUser();
+      if (!error && data.user) {
+        router.replace("/dashboard");
+      } else {
+        setCheckingSession(false);
+      }
+    }
+    checkUser();
+  }, [router, supabase]);
+
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <p className="text-sm text-gray-500">Checking your session...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white flex flex-col lg:flex-row">
       {/* Left - Image (desktop only) */}
@@ -41,8 +65,9 @@ export default function SignupPage() {
       {/* Right - Form */}
       <div className="w-full lg:w-1/2 bg-white flex items-center justify-center px-6 sm:px-8 py-12 lg:py-24">
         <div className="max-w-md w-full space-y-8">
+          {/* Icon + switch link + title */}
           <div className="text-center space-y-4 mt-6 lg:mt-10">
-            <div className="flex items-center justify-center gap-3 mb-2">
+            <div className="flex itemscenter justify-center gap-3 mb-2">
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#f2b42c] text-[#512d7c] font-bold">
                 ✨
               </span>
@@ -62,7 +87,9 @@ export default function SignupPage() {
             </h2>
           </div>
 
+          {/* Social / Email options */}
           <div className="space-y-4">
+            {/* Google only */}
             <button
               type="button"
               onClick={handleOAuthSignup}
@@ -74,6 +101,7 @@ export default function SignupPage() {
               </span>
             </button>
 
+            {/* Scroll to email form */}
             <button
               type="button"
               onClick={handleScrollToForm}
@@ -88,6 +116,7 @@ export default function SignupPage() {
 
           <div className="text-center text-black my-4">or</div>
 
+          {/* Email form section */}
           <div id="signup-form">
             <SignupForm />
           </div>
