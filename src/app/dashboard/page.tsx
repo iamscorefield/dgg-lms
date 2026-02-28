@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 export default async function Dashboard() {
   const supabase = await createServer();
 
-  // 1) Get session
   const {
     data: { session },
     error: sessionError,
@@ -21,7 +20,6 @@ export default async function Dashboard() {
 
   const authUserId = session.user.id;
 
-  // 2) Get this user's profile + role
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("id, role")
@@ -34,24 +32,22 @@ export default async function Dashboard() {
 
   const role = profile?.role;
 
-  // 3) Route by exact role if we have one
-  if (role === "pending_tutor") {
-    redirect("/pending-approval");
-  }
-
-  if (role === "student") {
-    redirect("/dashboard/student");
+  if (role === "admin") {
+    redirect("/dashboard/admin");
   }
 
   if (role === "tutor") {
     redirect("/dashboard/tutor");
   }
 
-  if (role === "admin") {
-    redirect("/dashboard/admin");
+  if (role === "student") {
+    redirect("/dashboard/student");
   }
 
-  // 4) Fallback: if profile missing or role unknown, send to student dashboard
+  if (role === "pending_tutor") {
+    redirect("/pending-approval");
+  }
+
   console.warn(
     "Dashboard fallback: missing profile or unknown role, sending to /dashboard/student for user id",
     authUserId,
