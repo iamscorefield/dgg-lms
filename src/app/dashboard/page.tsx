@@ -19,25 +19,22 @@ export default async function Dashboard() {
     redirect("/login");
   }
 
-  // Debug: log current auth user id
-  console.log("DASHBOARD AUTH USER ID:", session.user.id);
+  const authUserId = session.user.id;
 
   // 2) Get this user's profile + role
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("id, role")
-    .eq("id", session.user.id)
+    .eq("id", authUserId)
     .maybeSingle();
 
   if (profileError) {
     console.error("Error loading profile for dashboard:", profileError);
   }
 
-  console.log("DASHBOARD PROFILE RESULT:", profile);
-
-  // 3) Route by exact role if we have one
   const role = profile?.role;
 
+  // 3) Route by exact role if we have one
   if (role === "pending_tutor") {
     redirect("/pending-approval");
   }
@@ -57,7 +54,7 @@ export default async function Dashboard() {
   // 4) Fallback: if profile missing or role unknown, send to student dashboard
   console.warn(
     "Dashboard fallback: missing profile or unknown role, sending to /dashboard/student for user id",
-    session.user.id,
+    authUserId,
     "role:",
     role ?? "none"
   );
