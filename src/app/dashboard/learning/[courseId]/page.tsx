@@ -43,10 +43,10 @@ export default async function LearningPage(
 
   const isPremium = profile.membership_status === "premium";
 
-  // 2) Load course so we know its type
+  // 2) Load course using *course_type* (NOT type)
   const { data: course, error: courseError } = await supabase
     .from("courses")
-    .select("id, title, type")
+    .select("id, title, course_type")
     .eq("id", id)
     .single();
 
@@ -54,7 +54,7 @@ export default async function LearningPage(
     notFound();
   }
 
-  // 3) Fallback: check paid enrollment (for main courses)
+  // 3) Check paid enrollment for main courses (optional fallback)
   const { data: paidEnrollment } = await supabase
     .from("enrollments")
     .select("id, payment_status")
@@ -65,26 +65,24 @@ export default async function LearningPage(
 
   const hasPaidAccess = !!paidEnrollment;
 
-  // 4) Decide access:
-  // - If user is premium, they can access any precourse + whatever you allow.
-  // - If not premium, they need a paid enrollment for main courses.
+  // 4) Access rules
   const isPrecourse =
-    course.type === "precourse" || course.type === "prep_course";
+    course.course_type === "PreCourse" ||
+    course.course_type === "precourse" ||
+    course.course_type === "prep_course";
 
   const hasAccess =
     isPremium || (!isPrecourse && hasPaidAccess);
 
   if (!hasAccess) {
     if (isPrecourse) {
-      // Not premium, trying to open precourse learning → go back to precourse intro
       redirect(`/dashboard/precourse/${id}`);
     } else {
-      // Not premium and no paid enrollment for main course
       redirect(`/dashboard/student/courses/${id}`);
     }
   }
 
-  // 5) Load modules + counts only (no video/pdf here)
+  // 5) Load modules
   const { data: modulesData, error: modulesError } = await supabase
     .from("course_modules")
     .select(
@@ -119,7 +117,6 @@ export default async function LearningPage(
 
       <div className="flex-1 lg:ml-64 p-4 lg:p-8">
         <div className="max-w-6xl mx-auto">
-          {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
             <div>
               <p className="text-xs font-semibold text-[#512d7c] uppercase tracking-wide mb-1">
@@ -141,7 +138,6 @@ export default async function LearningPage(
             </a>
           </div>
 
-          {/* Modules list only (no video/pdf links here) */}
           <div className="grid gap-4 md:grid-cols-2">
             {modules.length === 0 ? (
               <p className="text-xs text-gray-500">
