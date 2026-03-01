@@ -32,6 +32,7 @@ export default async function PreCourseDetailPage(
   }
 
   const supabase = await createServer();
+
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -39,6 +40,15 @@ export default async function PreCourseDetailPage(
   if (!session) {
     redirect("/login");
   }
+
+  // Get membership_status from profile
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("membership_status")
+    .eq("id", session.user.id)
+    .maybeSingle();
+
+  const isPremium = profile?.membership_status === "premium";
 
   const { data: course, error: courseError } = await supabase
     .from("courses")
@@ -110,13 +120,24 @@ export default async function PreCourseDetailPage(
             </p>
 
             <div className="mt-5 flex flex-wrap gap-2">
-              {/* Later, you can point this to a free learning view if you build one */}
-              <a
-                href="/dashboard/prep/intro"
-                className="inline-flex items-center justify-center px-4 py-2 text-xs sm:text-sm rounded-full bg-[#f2b42c] text-black font-semibold hover:bg-[#e0a51a] transition"
-              >
-                Start prep course
-              </a>
+              {isPremium ? (
+                // Premium user: can start this prep course (reuse learning flow)
+                <a
+                  href={`/dashboard/learning/${course.id}`}
+                  className="inline-flex items-center justify-center px-4 py-2 text-xs sm:text-sm rounded-full bg-[#f2b42c] text-black font-semibold hover:bg-[#e0a51a] transition"
+                >
+                  Start prep course
+                </a>
+              ) : (
+                // Not premium: show payment CTA (change URL to your payment page)
+                <a
+                  href="/dashboard/precourse/upgrade"
+                  className="inline-flex items-center justify-center px-4 py-2 text-xs sm:text-sm rounded-full bg-[#f2b42c] text-black font-semibold hover:bg-[#e0a51a] transition"
+                >
+                  Pay once to unlock all prep courses
+                </a>
+              )}
+
               <a
                 href="/dashboard/precourse"
                 className="inline-flex items-center justify-center px-4 py-2 text-xs sm:text-sm rounded-full border border-gray-300 bg-white text-gray-800 font-semibold hover:bg-gray-50 transition"
