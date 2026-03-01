@@ -18,11 +18,11 @@ export function MembershipPaywallModal({
 
   let title = "Join DGG Student to unlock prep courses";
   let body =
-    "Pay a one-time fee of 30,000 to become a DGG Student and unlock access to our beginners prep program.";
+    "Pay a one-time fee of 50,000 to become a DGG Student and unlock access to our beginners prep program.";
   if (source === "profile-edit") {
     title = "Upgrade to edit your profile";
     body =
-      "Profile editing and full prep access are available for DGG Students. Pay a one-time fee of 30,000 to unlock these features.";
+      "Profile editing and full prep access are available for DGG Students. Pay a one-time fee of 50,000 to unlock these features.";
   }
 
   const handlePaystack = async () => {
@@ -43,7 +43,7 @@ export function MembershipPaywallModal({
         return;
       }
 
-      const amount = 30000; // NGN
+      const amount = 50000; // NGN
       const handler = (window as any).PaystackPop.setup({
         key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
         email,
@@ -104,7 +104,7 @@ export function MembershipPaywallModal({
             onClick={handlePaystack}
             className="px-3 py-1 rounded-full text-[11px] font-semibold text-white bg-[#512d7c] hover:bg-[#3f215f]"
           >
-            Pay 30,000 now
+            Pay 50,000 now
           </button>
         </div>
       </div>

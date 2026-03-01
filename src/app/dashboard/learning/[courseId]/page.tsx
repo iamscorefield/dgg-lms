@@ -30,8 +30,32 @@ export default async function LearningPage(
     notFound();
   }
 
-  // Check paid enrollment
-  const { data: enrollment } = await supabase
+  // 1) Load user profile to check membership_status
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("membership_status")
+    .eq("id", session.user.id)
+    .single();
+
+  if (profileError || !profile) {
+    notFound();
+  }
+
+  const isPremium = profile.membership_status === "premium";
+
+  // 2) Load course so we know its type
+  const { data: course, error: courseError } = await supabase
+    .from("courses")
+    .select("id, title, type")
+    .eq("id", id)
+    .single();
+
+  if (courseError || !course) {
+    notFound();
+  }
+
+  // 3) Fallback: check paid enrollment (for main courses)
+  const { data: paidEnrollment } = await supabase
     .from("enrollments")
     .select("id, payment_status")
     .eq("student_id", session.user.id)
@@ -39,22 +63,28 @@ export default async function LearningPage(
     .eq("payment_status", "paid")
     .maybeSingle();
 
-  if (!enrollment) {
-    redirect(`/dashboard/student/courses/${id}`);
+  const hasPaidAccess = !!paidEnrollment;
+
+  // 4) Decide access:
+  // - If user is premium, they can access any precourse + whatever you allow.
+  // - If not premium, they need a paid enrollment for main courses.
+  const isPrecourse =
+    course.type === "precourse" || course.type === "prep_course";
+
+  const hasAccess =
+    isPremium || (!isPrecourse && hasPaidAccess);
+
+  if (!hasAccess) {
+    if (isPrecourse) {
+      // Not premium, trying to open precourse learning → go back to precourse intro
+      redirect(`/dashboard/precourse/${id}`);
+    } else {
+      // Not premium and no paid enrollment for main course
+      redirect(`/dashboard/student/courses/${id}`);
+    }
   }
 
-  // Load course
-  const { data: course } = await supabase
-    .from("courses")
-    .select("id, title")
-    .eq("id", id)
-    .single();
-
-  if (!course) {
-    notFound();
-  }
-
-  // Load modules + counts only (no video/pdf here)
+  // 5) Load modules + counts only (no video/pdf here)
   const { data: modulesData, error: modulesError } = await supabase
     .from("course_modules")
     .select(
