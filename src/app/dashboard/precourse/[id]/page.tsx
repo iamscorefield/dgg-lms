@@ -131,7 +131,7 @@ export default async function PreCourseDetailPage(
               ) : (
                 // Not premium: show payment CTA (change URL to your payment page)
                 <a
-                  href="/dashboard/precourse/upgrade"
+                  href="/dashboard/prep/intro"
                   className="inline-flex items-center justify-center px-4 py-2 text-xs sm:text-sm rounded-full bg-[#f2b42c] text-black font-semibold hover:bg-[#e0a51a] transition"
                 >
                   Pay once to unlock all prep courses
