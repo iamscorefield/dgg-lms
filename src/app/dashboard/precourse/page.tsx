@@ -86,7 +86,7 @@ export default async function PreCourseResourcesPage(
               Prep program courses
             </h1>
             <p className="mt-2 text-sm text-gray-600 max-w-2xl">
-              These free prep courses help you warm up before deeper programs.
+              These Prep courses help you warm up before deeper programs.
               Browse their details and get a feel for your learning path.
             </p>
           </div>
@@ -95,7 +95,7 @@ export default async function PreCourseResourcesPage(
               How to use this section
             </p>
             <ul className="space-y-1.5 text-xs text-gray-600">
-              <li>• Browse all free prep courses and see what you will learn.</li>
+              <li>• Browse all Prep courses and see what you will learn.</li>
               <li>• Open each course page to read full details and outline.</li>
               <li>• When you are ready to enroll fully, use the DGG Academy page.</li>
             </ul>
@@ -179,13 +179,13 @@ export default async function PreCourseResourcesPage(
         <section className="flex items-center justify-between text-xs text-gray-600">
           <p>
             {hasCourses
-              ? `Showing ${courses!.length} free prep course${
+              ? `Showing ${courses!.length} prep course${
                   courses!.length === 1 ? "" : "s"
                 }`
-              : "No free prep courses published yet."}
+              : "prep courses published yet."}
           </p>
           <p className="hidden sm:block">
-            Free prep courses live here. Paid main programs are in the course
+            Prep courses live here. Paid main programs are in the course
             catalog.
           </p>
         </section>
@@ -211,7 +211,7 @@ export default async function PreCourseResourcesPage(
                         {course.category || "Prep course"}
                       </span>
                       <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700">
-                        Free prep course
+                        Prep course
                       </span>
                     </div>
 
