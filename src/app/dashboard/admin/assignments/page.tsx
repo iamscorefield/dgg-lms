@@ -73,8 +73,7 @@ export default async function AdminAssignmentsPage() {
     console.error("Error loading tutors for assignments:", tutorsError);
   }
 
-  // Load recent enrollments with student + course info.
-  // Adjust columns if your schema uses different names.
+  // Load recent enrollments with student + course info using student_id and course_id
   const { data: enrollments, error: enrollmentsError } = await supabase
     .from("enrollments")
     .select(
@@ -82,8 +81,8 @@ export default async function AdminAssignmentsPage() {
       id,
       student_id,
       course_id,
-      profiles!student_id(full_name, email),
-      courses(title)
+      student:profiles!student_id(full_name, email),
+      course:courses!course_id(title)
     `
     )
     .order("created_at", { ascending: false })
@@ -91,12 +90,6 @@ export default async function AdminAssignmentsPage() {
 
   if (enrollmentsError) {
     console.error("Error loading enrollments for assignments:", enrollmentsError);
-  }
-
-  if (!enrollments || enrollments.length === 0) {
-    console.warn(
-      "No enrollments returned for admin assignments. Check the enrollments table and column names."
-    );
   }
 
   const { data: assignments, error: assignmentsError } = await supabase
@@ -108,11 +101,11 @@ export default async function AdminAssignmentsPage() {
       tutor_id,
       assigned_at,
       notes,
-      profiles!tutor_id(full_name) as tutor,
-      enrollments(
+      tutor:profiles!tutor_id(full_name),
+      enrollment:enrollments(
         id,
-        profiles!student_id(full_name) as student,
-        courses(title)
+        student:profiles!student_id(full_name),
+        course:courses!course_id(title)
       )
     `
     )
@@ -159,9 +152,9 @@ export default async function AdminAssignmentsPage() {
                 </option>
                 {(enrollments || []).map((e: any) => (
                   <option key={e.id} value={e.id}>
-                    {(e.profiles?.full_name || "Student") +
+                    {(e.student?.full_name || "Student") +
                       " — " +
-                      (e.courses?.title || "Course")}
+                      (e.course?.title || "Course")}
                   </option>
                 ))}
               </select>
@@ -250,13 +243,13 @@ export default async function AdminAssignmentsPage() {
                     className="border-t last:border-b-0 hover:bg-gray-50"
                   >
                     <td className="px-4 py-3">
-                      {item.enrollments?.student?.full_name || "Student"}
+                      {item.enrollment?.student?.full_name || "Student"}
                     </td>
                     <td className="px-4 py-3">
                       {item.tutor?.full_name || "Tutor"}
                     </td>
                     <td className="px-4 py-3">
-                      {item.enrollments?.courses?.title || "—"}
+                      {item.enrollment?.course?.title || "—"}
                     </td>
                     <td className="px-4 py-3">
                       {item.notes || "—"}
