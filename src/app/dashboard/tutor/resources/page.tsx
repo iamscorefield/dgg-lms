@@ -17,9 +17,9 @@ async function createTutorResource(formData: FormData) {
   const title = String(formData.get("title") || "").trim();
   const content = String(formData.get("content") || "").trim();
   const videoUrl = String(formData.get("video_url") || "").trim();
+  const pdfUrl = String(formData.get("pdf_url") || "").trim();
 
   if (!title) {
-    // Later: you can add error handling or flash messages
     return;
   }
 
@@ -28,6 +28,7 @@ async function createTutorResource(formData: FormData) {
     title,
     content,
     video_url: videoUrl || null,
+    pdf_url: pdfUrl || null,
   });
 
   redirect("/dashboard/tutor/resources");
@@ -43,11 +44,9 @@ export default async function TutorResourcesPage() {
     redirect("/login");
   }
 
-  // Optionally, you could check that this user is actually a tutor via profiles.role
-
   const { data: resources, error } = await supabase
     .from("tutor_resources")
-    .select("id, title, content, video_url, created_at")
+    .select("id, title, content, video_url, pdf_url, created_at")
     .eq("tutor_id", session.user.id)
     .order("created_at", { ascending: false });
 
@@ -66,7 +65,8 @@ export default async function TutorResourcesPage() {
           Teaching Resources
         </h1>
         <p className="text-sm text-gray-700 mb-8 max-w-2xl">
-          Create and manage lesson notes, reference links, and videos you use with your students.
+          Create and manage lesson notes, reference links, videos and PDFs you
+          use with your students.
         </p>
 
         {/* Create new resource */}
@@ -87,12 +87,20 @@ export default async function TutorResourcesPage() {
               rows={5}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#f2b42c]"
             />
-            <input
-              name="video_url"
-              type="text"
-              placeholder="Optional video / PDF / link URL"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#f2b42c]"
-            />
+            <div className="grid gap-3 md:grid-cols-2">
+              <input
+                name="video_url"
+                type="text"
+                placeholder="Main video link (YouTube, Loom, etc.)"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#f2b42c]"
+              />
+              <input
+                name="pdf_url"
+                type="text"
+                placeholder="Main PDF / document link"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#f2b42c]"
+              />
+            </div>
             <button
               type="submit"
               className="px-6 py-2 bg-[#512d7c] text-white text-xs sm:text-sm font-semibold rounded-full hover:bg-[#3f2361]"
@@ -106,8 +114,8 @@ export default async function TutorResourcesPage() {
         {!hasResources ? (
           <div className="bg-white rounded-2xl shadow p-6">
             <p className="text-sm text-gray-700">
-              You haven’t created any teaching resources yet. Start by adding your
-              first lesson outline or reference material above.
+              You haven’t created any teaching resources yet. Start by adding
+              your first lesson outline or reference material above.
             </p>
           </div>
         ) : (
@@ -126,11 +134,18 @@ export default async function TutorResourcesPage() {
                     {r.content}
                   </p>
                 )}
-                {r.video_url && (
-                  <p className="text-[11px] text-gray-500 mt-1 truncate">
-                    Link: {r.video_url}
-                  </p>
-                )}
+                <div className="flex flex-wrap gap-2 mt-1 text-[11px]">
+                  {r.video_url && (
+                    <span className="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-[#512d7c]">
+                      Video link
+                    </span>
+                  )}
+                  {r.pdf_url && (
+                    <span className="inline-flex items-center rounded-full bg-yellow-50 px-2 py-0.5 text-[#a36b00]">
+                      PDF link
+                    </span>
+                  )}
+                </div>
                 <p className="text-[10px] text-gray-400 mt-1">
                   Created on {new Date(r.created_at).toLocaleDateString()}
                 </p>

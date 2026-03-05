@@ -35,7 +35,6 @@ async function createModule(formData: FormData) {
     return;
   }
 
-  // Optional: compute sort_order as last + 1
   const { data: existing } = await supabase
     .from("tutor_resource_modules")
     .select("sort_order")
@@ -81,7 +80,6 @@ async function createItem(formData: FormData) {
     return;
   }
 
-  // Optional: compute sort_order as last + 1
   const { data: existing } = await supabase
     .from("tutor_resource_items")
     .select("sort_order")
@@ -122,7 +120,7 @@ export default async function TutorResourceDetailPage(
 
   const { data: resource, error: resourceError } = await supabase
     .from("tutor_resources")
-    .select("id, title, content, video_url, created_at")
+    .select("id, title, content, video_url, pdf_url, created_at")
     .eq("id", resourceId)
     .eq("tutor_id", session.user.id)
     .maybeSingle();
@@ -198,22 +196,44 @@ export default async function TutorResourceDetailPage(
           </div>
 
           {/* Resource overview */}
-          <section className="bg-white rounded-2xl shadow p-6 space-y-3 border border-gray-100">
+          <section className="bg-white rounded-2xl shadow p-6 space-y-4 border border-gray-100">
             {resource.content && (
               <p className="text-sm text-gray-700 whitespace-pre-line">
                 {resource.content}
               </p>
             )}
-            {resource.video_url && (
-              <a
-                href={resource.video_url}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#f2b42c] hover:underline"
-              >
-                Open main link / video →
-              </a>
-            )}
+            <div className="flex flex-col gap-2 text-xs">
+              {resource.video_url && (
+                <div>
+                  <p className="text-[11px] text-gray-500 mb-1">
+                    Main video link:
+                  </p>
+                  <a
+                    href={resource.video_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 font-semibold text-[#f2b42c] hover:underline break-all"
+                  >
+                    Open video →
+                  </a>
+                </div>
+              )}
+              {resource.pdf_url && (
+                <div className="pt-2 border-t border-dashed border-gray-200">
+                  <p className="text-[11px] text-gray-500 mb-1">
+                    Main PDF / document:
+                  </p>
+                  <a
+                    href={resource.pdf_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 font-semibold text-[#f2b42c] hover:underline break-all"
+                  >
+                    Open PDF →
+                  </a>
+                </div>
+              )}
+            </div>
           </section>
 
           {/* Create new module */}
