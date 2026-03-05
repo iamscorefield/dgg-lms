@@ -24,12 +24,46 @@ async function createAssignment(formData: FormData) {
     redirect("/dashboard");
   }
 
-  const enrollmentId = String(formData.get("enrollment_id") || "").trim();
+  const studentId = String(formData.get("student_id") || "").trim();
   const tutorId = String(formData.get("tutor_id") || "").trim();
   const notes = String(formData.get("notes") || "").trim();
 
-  if (!enrollmentId || !tutorId) {
+  if (!studentId || !tutorId) {
     return;
+  }
+
+  // Find or create an enrollment row for this student.
+  // For now we just create a "dummy" enrollment without a specific course if none exists.
+  // Adjust this if you need course-specific assignments.
+
+  // Try to find an existing enrollment (any) for this student.
+  const { data: existingEnrollments } = await supabase
+    .from("enrollments")
+    .select("id")
+    .eq("student_id", studentId)
+    .limit(1);
+
+  let enrollmentId: string;
+
+  if (existingEnrollments && existingEnrollments.length > 0) {
+    enrollmentId = existingEnrollments[0].id;
+  } else {
+    // Create a simple enrollment row just to attach the assignment.
+    const { data: inserted, error: insertError } = await supabase
+      .from("enrollments")
+      .insert({
+        student_id: studentId,
+        // course_id: null, // optional, depending on your schema; remove if NOT NULL
+      })
+      .select("id")
+      .single();
+
+    if (insertError || !inserted) {
+      console.error("Error creating enrollment for assignment:", insertError);
+      return;
+    }
+
+    enrollmentId = inserted.id;
   }
 
   await supabase.from("one_on_one_assignments").insert({
@@ -62,6 +96,17 @@ export default async function AdminAssignmentsPage() {
     redirect("/dashboard");
   }
 
+  // Load all students (role = student)
+  const { data: students, error: studentsError } = await supabase
+    .from("profiles")
+    .select("id, full_name, email")
+    .eq("role", "student")
+    .order("full_name", { ascending: true });
+
+  if (studentsError) {
+    console.error("Error loading students for assignments:", studentsError);
+  }
+
   // Load tutors (role = tutor)
   const { data: tutors, error: tutorsError } = await supabase
     .from("profiles")
@@ -73,25 +118,7 @@ export default async function AdminAssignmentsPage() {
     console.error("Error loading tutors for assignments:", tutorsError);
   }
 
-  // Load recent enrollments with student + course info using student_id and course_id
-  const { data: enrollments, error: enrollmentsError } = await supabase
-    .from("enrollments")
-    .select(
-      `
-      id,
-      student_id,
-      course_id,
-      student:profiles!student_id(full_name, email),
-      course:courses!course_id(title)
-    `
-    )
-    .order("created_at", { ascending: false })
-    .limit(100);
-
-  if (enrollmentsError) {
-    console.error("Error loading enrollments for assignments:", enrollmentsError);
-  }
-
+  // Load existing assignments joined back to student + tutor
   const { data: assignments, error: assignmentsError } = await supabase
     .from("one_on_one_assignments")
     .select(
@@ -104,8 +131,7 @@ export default async function AdminAssignmentsPage() {
       tutor:profiles!tutor_id(full_name),
       enrollment:enrollments(
         id,
-        student:profiles!student_id(full_name),
-        course:courses!course_id(title)
+        student:profiles!student_id(full_name)
       )
     `
     )
@@ -125,8 +151,8 @@ export default async function AdminAssignmentsPage() {
           Assign Tutors &amp; 1‑to‑1
         </h1>
         <p className="text-sm text-gray-700 mb-8 max-w-2xl">
-          Assign tutors to enrolled students for focused one‑to‑one support and
-          see existing mappings.
+          Assign tutors directly to students for one‑to‑one support, and review
+          existing assignments.
         </p>
 
         {/* Assignment form */}
@@ -135,26 +161,25 @@ export default async function AdminAssignmentsPage() {
             New Assignment
           </h2>
           <form action={createAssignment} className="grid gap-4 md:grid-cols-3">
-            {/* Enrollment select */}
+            {/* Student select */}
             <div className="md:col-span-1">
               <label className="block text-xs font-medium text-gray-700 mb-1">
-                Enrolled student &amp; course
+                Student
               </label>
               <select
-                name="enrollment_id"
+                name="student_id"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#f2b42c]"
                 defaultValue=""
               >
                 <option value="" disabled>
-                  {enrollments && enrollments.length > 0
-                    ? "Select student + course"
-                    : "No enrollments found"}
+                  {students && students.length > 0
+                    ? "Select student"
+                    : "No students found"}
                 </option>
-                {(enrollments || []).map((e: any) => (
-                  <option key={e.id} value={e.id}>
-                    {(e.student?.full_name || "Student") +
-                      " — " +
-                      (e.course?.title || "Course")}
+                {(students || []).map((s: any) => (
+                  <option key={s.id} value={s.id}>
+                    {(s.full_name || "Student") +
+                      (s.email ? ` (${s.email})` : "")}
                   </option>
                 ))}
               </select>
@@ -177,7 +202,8 @@ export default async function AdminAssignmentsPage() {
                 </option>
                 {(tutors || []).map((t: any) => (
                   <option key={t.id} value={t.id}>
-                    {t.full_name || "Tutor"} ({t.email})
+                    {(t.full_name || "Tutor") +
+                      (t.email ? ` (${t.email})` : "")}
                   </option>
                 ))}
               </select>
@@ -226,9 +252,6 @@ export default async function AdminAssignmentsPage() {
                     Tutor
                   </th>
                   <th className="px-4 py-3 text-left font-semibold text-[#512d7c]">
-                    Course
-                  </th>
-                  <th className="px-4 py-3 text-left font-semibold text-[#512d7c]">
                     Notes
                   </th>
                   <th className="px-4 py-3 text-right font-semibold text-[#512d7c]">
@@ -247,9 +270,6 @@ export default async function AdminAssignmentsPage() {
                     </td>
                     <td className="px-4 py-3">
                       {item.tutor?.full_name || "Tutor"}
-                    </td>
-                    <td className="px-4 py-3">
-                      {item.enrollment?.course?.title || "—"}
                     </td>
                     <td className="px-4 py-3">
                       {item.notes || "—"}
