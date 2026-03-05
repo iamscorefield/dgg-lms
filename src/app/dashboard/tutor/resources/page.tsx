@@ -2,6 +2,37 @@ import Sidebar from "@/components/Sidebar";
 import { createServer } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 
+async function createTutorResource(formData: FormData) {
+  "use server";
+
+  const supabase = await createServer();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    redirect("/login");
+  }
+
+  const title = String(formData.get("title") || "").trim();
+  const content = String(formData.get("content") || "").trim();
+  const videoUrl = String(formData.get("video_url") || "").trim();
+
+  if (!title) {
+    // Later: you can add error handling or flash messages
+    return;
+  }
+
+  await supabase.from("tutor_resources").insert({
+    tutor_id: session.user.id,
+    title,
+    content,
+    video_url: videoUrl || null,
+  });
+
+  redirect("/dashboard/tutor/resources");
+}
+
 export default async function TutorResourcesPage() {
   const supabase = await createServer();
   const {
@@ -12,8 +43,19 @@ export default async function TutorResourcesPage() {
     redirect("/login");
   }
 
-  // Later: fetch from tutor_resources table filtered by tutor_id
-  const resources: any[] = [];
+  // Optionally, you could check that this user is actually a tutor via profiles.role
+
+  const { data: resources, error } = await supabase
+    .from("tutor_resources")
+    .select("id, title, content, video_url, created_at")
+    .eq("tutor_id", session.user.id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error loading tutor resources:", error);
+  }
+
+  const hasResources = resources && resources.length > 0;
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -27,35 +69,41 @@ export default async function TutorResourcesPage() {
           Create and manage lesson notes, reference links, and videos you use with your students.
         </p>
 
-        {/* Create new resource (UI only for now) */}
+        {/* Create new resource */}
         <div className="bg-white rounded-2xl shadow p-6 mb-10">
           <h2 className="text-lg font-bold text-[#512d7c] mb-4">
             Create New Resource
           </h2>
-          <div className="space-y-4">
+          <form action={createTutorResource} className="space-y-4">
             <input
+              name="title"
               type="text"
               placeholder="Resource title (e.g. HTML Basics Lesson 1)"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#f2b42c]"
             />
             <textarea
+              name="content"
               placeholder="Description or lesson notes..."
               rows={5}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#f2b42c]"
             />
             <input
+              name="video_url"
               type="text"
-              placeholder="Optional video URL (YouTube, Loom, etc.)"
+              placeholder="Optional video / PDF / link URL"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#f2b42c]"
             />
-            <button className="px-6 py-2 bg-[#512d7c] text-white text-xs sm:text-sm font-semibold rounded-full hover:bg-[#3f2361]">
-              Save Resource (coming soon)
+            <button
+              type="submit"
+              className="px-6 py-2 bg-[#512d7c] text-white text-xs sm:text-sm font-semibold rounded-full hover:bg-[#3f2361]"
+            >
+              Save Resource
             </button>
-          </div>
+          </form>
         </div>
 
         {/* Existing resources */}
-        {resources.length === 0 ? (
+        {!hasResources ? (
           <div className="bg-white rounded-2xl shadow p-6">
             <p className="text-sm text-gray-700">
               You haven’t created any teaching resources yet. Start by adding your
@@ -64,7 +112,34 @@ export default async function TutorResourcesPage() {
           </div>
         ) : (
           <div className="grid md:grid-cols-2 gap-6">
-            {/* Later: map resources here */}
+            {resources!.map((r: any) => (
+              <a
+                key={r.id}
+                href={`/dashboard/tutor/resources/${r.id}`}
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col gap-2 hover:shadow-md hover:border-[#f2b42c] transition-all"
+              >
+                <h3 className="text-sm font-semibold text-[#512d7c]">
+                  {r.title}
+                </h3>
+                {r.content && (
+                  <p className="text-xs text-gray-700 line-clamp-3">
+                    {r.content}
+                  </p>
+                )}
+                {r.video_url && (
+                  <p className="text-[11px] text-gray-500 mt-1 truncate">
+                    Link: {r.video_url}
+                  </p>
+                )}
+                <p className="text-[10px] text-gray-400 mt-1">
+                  Created on {new Date(r.created_at).toLocaleDateString()}
+                </p>
+                <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-[#f2b42c]">
+                  Open & manage modules
+                  <span aria-hidden="true">→</span>
+                </span>
+              </a>
+            ))}
           </div>
         )}
       </div>
