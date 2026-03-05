@@ -14,7 +14,6 @@ async function createAssignment(formData: FormData) {
     redirect("/login");
   }
 
-  // Confirm this user is admin
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
@@ -63,7 +62,7 @@ export default async function AdminAssignmentsPage() {
     redirect("/dashboard");
   }
 
-  // Load tutors
+  // Load tutors (role = tutor)
   const { data: tutors, error: tutorsError } = await supabase
     .from("profiles")
     .select("id, full_name, email")
@@ -74,7 +73,8 @@ export default async function AdminAssignmentsPage() {
     console.error("Error loading tutors for assignments:", tutorsError);
   }
 
-  // Load recent enrollments with student + course info
+  // Load recent enrollments with student + course info.
+  // Adjust columns if your schema uses different names.
   const { data: enrollments, error: enrollmentsError } = await supabase
     .from("enrollments")
     .select(
@@ -91,6 +91,12 @@ export default async function AdminAssignmentsPage() {
 
   if (enrollmentsError) {
     console.error("Error loading enrollments for assignments:", enrollmentsError);
+  }
+
+  if (!enrollments || enrollments.length === 0) {
+    console.warn(
+      "No enrollments returned for admin assignments. Check the enrollments table and column names."
+    );
   }
 
   const { data: assignments, error: assignmentsError } = await supabase
@@ -139,7 +145,7 @@ export default async function AdminAssignmentsPage() {
             {/* Enrollment select */}
             <div className="md:col-span-1">
               <label className="block text-xs font-medium text-gray-700 mb-1">
-                Enrolled student & course
+                Enrolled student &amp; course
               </label>
               <select
                 name="enrollment_id"
@@ -147,12 +153,15 @@ export default async function AdminAssignmentsPage() {
                 defaultValue=""
               >
                 <option value="" disabled>
-                  Select student + course
+                  {enrollments && enrollments.length > 0
+                    ? "Select student + course"
+                    : "No enrollments found"}
                 </option>
                 {(enrollments || []).map((e: any) => (
                   <option key={e.id} value={e.id}>
-                    {e.profiles?.full_name || "Student"} —{" "}
-                    {e.courses?.title || "Course"}
+                    {(e.profiles?.full_name || "Student") +
+                      " — " +
+                      (e.courses?.title || "Course")}
                   </option>
                 ))}
               </select>
@@ -169,7 +178,9 @@ export default async function AdminAssignmentsPage() {
                 defaultValue=""
               >
                 <option value="" disabled>
-                  Select tutor
+                  {tutors && tutors.length > 0
+                    ? "Select tutor"
+                    : "No tutors found"}
                 </option>
                 {(tutors || []).map((t: any) => (
                   <option key={t.id} value={t.id}>

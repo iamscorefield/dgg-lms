@@ -88,6 +88,12 @@ export default function Sidebar({ role }: { role: Role }) {
                     Browse Courses
                   </a>
                   <a
+                    href="/dashboard/student/resources"
+                    className="block py-2.5 px-4 text-[#512d7c] hover:bg-[#f2b42c]/10 rounded-lg transition"
+                  >
+                    Tutor Resources
+                  </a>
+                  <a
                     href="/dashboard/student/progress"
                     className="block py-2.5 px-4 text-[#512d7c] hover:bg-[#f2b42c]/10 rounded-lg transition"
                   >
