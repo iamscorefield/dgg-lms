@@ -33,10 +33,6 @@ async function createAssignment(formData: FormData) {
   }
 
   // Find or create an enrollment row for this student.
-  // For now we just create a "dummy" enrollment without a specific course if none exists.
-  // Adjust this if you need course-specific assignments.
-
-  // Try to find an existing enrollment (any) for this student.
   const { data: existingEnrollments } = await supabase
     .from("enrollments")
     .select("id")
@@ -48,12 +44,11 @@ async function createAssignment(formData: FormData) {
   if (existingEnrollments && existingEnrollments.length > 0) {
     enrollmentId = existingEnrollments[0].id;
   } else {
-    // Create a simple enrollment row just to attach the assignment.
     const { data: inserted, error: insertError } = await supabase
       .from("enrollments")
       .insert({
         student_id: studentId,
-        // course_id: null, // optional, depending on your schema; remove if NOT NULL
+        // If course_id is NOT NULL in your schema, set a default course_id here.
       })
       .select("id")
       .single();
@@ -96,45 +91,10 @@ export default async function AdminAssignmentsPage() {
     redirect("/dashboard");
   }
 
-  // Load all students (role = student)
-  const { data: students, error: studentsError } = await supabase
-    .from("profiles")
-    .select("id, full_name, email")
-    .eq("role", "student")
-    .order("full_name", { ascending: true });
-
-  if (studentsError) {
-    console.error("Error loading students for assignments:", studentsError);
-  }
-
-  // Load tutors (role = tutor)
-  const { data: tutors, error: tutorsError } = await supabase
-    .from("profiles")
-    .select("id, full_name, email")
-    .eq("role", "tutor")
-    .order("full_name", { ascending: true });
-
-  if (tutorsError) {
-    console.error("Error loading tutors for assignments:", tutorsError);
-  }
-
-  // Load existing assignments joined back to student + tutor
+  // Load existing assignments, but keep it simple in case of RLS limits.
   const { data: assignments, error: assignmentsError } = await supabase
     .from("one_on_one_assignments")
-    .select(
-      `
-      id,
-      enrollment_id,
-      tutor_id,
-      assigned_at,
-      notes,
-      tutor:profiles!tutor_id(full_name),
-      enrollment:enrollments(
-        id,
-        student:profiles!student_id(full_name)
-      )
-    `
-    )
+    .select("id, enrollment_id, tutor_id, assigned_at, notes")
     .order("assigned_at", { ascending: false })
     .limit(100);
 
@@ -151,62 +111,40 @@ export default async function AdminAssignmentsPage() {
           Assign Tutors &amp; 1‑to‑1
         </h1>
         <p className="text-sm text-gray-700 mb-8 max-w-2xl">
-          Assign tutors directly to students for one‑to‑one support, and review
-          existing assignments.
+          Paste the student and tutor IDs from Supabase to create one‑to‑one
+          assignments manually.
         </p>
 
         {/* Assignment form */}
         <div className="bg-white rounded-2xl shadow p-6 mb-8 border border-gray-100">
           <h2 className="text-lg font-bold text-[#512d7c] mb-4">
-            New Assignment
+            New Assignment (manual IDs)
           </h2>
           <form action={createAssignment} className="grid gap-4 md:grid-cols-3">
-            {/* Student select */}
+            {/* Student ID input */}
             <div className="md:col-span-1">
               <label className="block text-xs font-medium text-gray-700 mb-1">
-                Student
+                Student ID (from profiles.id)
               </label>
-              <select
+              <input
                 name="student_id"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#f2b42c]"
-                defaultValue=""
-              >
-                <option value="" disabled>
-                  {students && students.length > 0
-                    ? "Select student"
-                    : "No students found"}
-                </option>
-                {(students || []).map((s: any) => (
-                  <option key={s.id} value={s.id}>
-                    {(s.full_name || "Student") +
-                      (s.email ? ` (${s.email})` : "")}
-                  </option>
-                ))}
-              </select>
+                type="text"
+                placeholder="Paste student UUID here"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#f2b42c]"
+              />
             </div>
 
-            {/* Tutor select */}
+            {/* Tutor ID input */}
             <div className="md:col-span-1">
               <label className="block text-xs font-medium text-gray-700 mb-1">
-                Tutor
+                Tutor ID (from profiles.id)
               </label>
-              <select
+              <input
                 name="tutor_id"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-black focus:outline-none focus:ring-2 focus:ring-[#f2b42c]"
-                defaultValue=""
-              >
-                <option value="" disabled>
-                  {tutors && tutors.length > 0
-                    ? "Select tutor"
-                    : "No tutors found"}
-                </option>
-                {(tutors || []).map((t: any) => (
-                  <option key={t.id} value={t.id}>
-                    {(t.full_name || "Tutor") +
-                      (t.email ? ` (${t.email})` : "")}
-                  </option>
-                ))}
-              </select>
+                type="text"
+                placeholder="Paste tutor UUID here"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#f2b42c]"
+              />
             </div>
 
             {/* Notes */}
@@ -231,6 +169,11 @@ export default async function AdminAssignmentsPage() {
               </button>
             </div>
           </form>
+
+          <p className="mt-4 text-[11px] text-gray-500">
+            Tip: In Supabase, open the <strong>profiles</strong> table and copy
+            the <strong>id</strong> for the student and tutor you want to link.
+          </p>
         </div>
 
         {/* Existing assignments */}
@@ -246,10 +189,13 @@ export default async function AdminAssignmentsPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left font-semibold text-[#512d7c]">
-                    Student
+                    Enrollment ID
                   </th>
                   <th className="px-4 py-3 text-left font-semibold text-[#512d7c]">
-                    Tutor
+                    Student ID
+                  </th>
+                  <th className="px-4 py-3 text-left font-semibold text-[#512d7c]">
+                    Tutor ID
                   </th>
                   <th className="px-4 py-3 text-left font-semibold text-[#512d7c]">
                     Notes
@@ -265,12 +211,9 @@ export default async function AdminAssignmentsPage() {
                     key={item.id}
                     className="border-t last:border-b-0 hover:bg-gray-50"
                   >
-                    <td className="px-4 py-3">
-                      {item.enrollment?.student?.full_name || "Student"}
-                    </td>
-                    <td className="px-4 py-3">
-                      {item.tutor?.full_name || "Tutor"}
-                    </td>
+                    <td className="px-4 py-3">{item.enrollment_id}</td>
+                    <td className="px-4 py-3">{/* student_id is on enrollment */}</td>
+                    <td className="px-4 py-3">{item.tutor_id}</td>
                     <td className="px-4 py-3">
                       {item.notes || "—"}
                     </td>
