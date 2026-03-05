@@ -38,7 +38,10 @@ export default async function StudentResourceDetailPage(
     .eq("student_id", session.user.id);
 
   if (enrollmentsError) {
-    console.error("Error loading enrollments for student resource detail:", enrollmentsError);
+    console.error(
+      "Error loading enrollments for student resource detail:",
+      enrollmentsError
+    );
   }
 
   const enrollmentIds = (enrollments || []).map((e: any) => e.id);
@@ -53,7 +56,10 @@ export default async function StudentResourceDetailPage(
     .in("enrollment_id", enrollmentIds);
 
   if (assignmentsError) {
-    console.error("Error loading assignments for student resource detail:", assignmentsError);
+    console.error(
+      "Error loading assignments for student resource detail:",
+      assignmentsError
+    );
   }
 
   const tutorIds = Array.from(
@@ -83,9 +89,18 @@ export default async function StudentResourceDetailPage(
     .maybeSingle();
 
   if (resourceError || !resource) {
-    console.error("Resource not accessible for this student:", resourceError);
+    console.error(
+      "Resource not accessible for this student:",
+      resourceError
+    );
     redirect("/dashboard/student/resources");
   }
+
+  // tutor is returned as an array from the join
+  const tutorName =
+    Array.isArray(resource.tutor) && resource.tutor.length > 0
+      ? resource.tutor[0].full_name
+      : null;
 
   // 3) Load modules and items for this resource
   const { data: modulesData, error: modulesError } = await supabase
@@ -109,7 +124,10 @@ export default async function StudentResourceDetailPage(
     .order("sort_order", { ascending: true });
 
   if (modulesError) {
-    console.error("Error loading tutor resource modules (student):", modulesError);
+    console.error(
+      "Error loading tutor resource modules (student):",
+      modulesError
+    );
   }
 
   const modules: ModuleRow[] = (modulesData || []).map((m: any) => ({
@@ -144,9 +162,9 @@ export default async function StudentResourceDetailPage(
               <span>/</span>
               <span>{resource.title || "Resource"}</span>
             </div>
-            {resource.tutor?.full_name && (
+            {tutorName && (
               <span className="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#512d7c]">
-                {resource.tutor.full_name}
+                {tutorName}
               </span>
             )}
           </div>
