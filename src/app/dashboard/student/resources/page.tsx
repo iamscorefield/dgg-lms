@@ -15,16 +15,19 @@ export default async function StudentResourcesPage() {
   // 1) Find this student's enrollments (for one_on_one_assignments join)
   const { data: enrollments, error: enrollmentsError } = await supabase
     .from("enrollments")
-    .select("id")
+    .select("id, student_id")
     .eq("student_id", session.user.id);
 
   if (enrollmentsError) {
-    console.error("Error loading enrollments for student resources:", enrollmentsError);
+    console.error(
+      "Error loading enrollments for student resources:",
+      enrollmentsError
+    );
   }
 
   const enrollmentIds = (enrollments || []).map((e: any) => e.id);
+
   if (enrollmentIds.length === 0) {
-    // No enrollments => no one-on-one assignments => no tutor resources
     return (
       <div className="flex min-h-screen bg-gray-50">
         <Sidebar role="student" />
@@ -33,8 +36,8 @@ export default async function StudentResourcesPage() {
             Tutor Resources
           </h1>
           <p className="text-sm text-gray-700 mb-8 max-w-2xl">
-            When an admin assigns you to a tutor for a course, any resources they
-            share will appear here.
+            When an admin assigns you to a tutor, any resources they share will
+            appear here.
           </p>
           <div className="bg-white rounded-2xl shadow p-6">
             <p className="text-sm text-gray-700">
@@ -54,7 +57,10 @@ export default async function StudentResourcesPage() {
     .in("enrollment_id", enrollmentIds);
 
   if (assignmentsError) {
-    console.error("Error loading one-on-one assignments:", assignmentsError);
+    console.error(
+      "Error loading one-on-one assignments for student resources:",
+      assignmentsError
+    );
   }
 
   const tutorIds = Array.from(
@@ -70,14 +76,14 @@ export default async function StudentResourcesPage() {
             Tutor Resources
           </h1>
           <p className="text-sm text-gray-700 mb-8 max-w-2xl">
-            When an admin assigns you to a tutor for a course, any resources they
-            share will appear here.
+            When an admin assigns you to a tutor, any resources they share will
+            appear here.
           </p>
           <div className="bg-white rounded-2xl shadow p-6">
             <p className="text-sm text-gray-700">
-              You have enrollments but no tutor has been assigned for one‑to‑one
-              support yet. Once a tutor is assigned, their resources will show
-              here.
+              You have enrollments, but no tutor has been assigned for
+              one‑to‑one support yet. Once a tutor is assigned, their resources
+              will show here.
             </p>
           </div>
         </div>
@@ -94,6 +100,7 @@ export default async function StudentResourcesPage() {
       title,
       content,
       video_url,
+      pdf_url,
       created_at,
       tutor_id,
       tutor:profiles!tutor_id(full_name)
@@ -103,7 +110,10 @@ export default async function StudentResourcesPage() {
     .order("created_at", { ascending: false });
 
   if (resourcesError) {
-    console.error("Error loading tutor resources for student:", resourcesError);
+    console.error(
+      "Error loading tutor resources for student resources page:",
+      resourcesError
+    );
   }
 
   const hasResources = resources && resources.length > 0;
