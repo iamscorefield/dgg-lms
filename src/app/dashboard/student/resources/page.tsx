@@ -61,7 +61,16 @@ export default async function StudentResourcesPage() {
   // 2) Get assignments for these enrollments
   const { data: assignments, error: assignmentsError } = await supabase
     .from("one_on_one_assignments")
-    .select("id, tutor_id, enrollment_id, notes, assigned_at")
+    .select(
+      `
+      id,
+      tutor_id,
+      enrollment_id,
+      notes,
+      assigned_at,
+      tutor:profiles!tutor_id(full_name)
+    `
+    )
     .in("enrollment_id", enrollmentIds);
 
   if (assignmentsError) {
@@ -108,6 +117,14 @@ export default async function StudentResourcesPage() {
     );
   }
 
+  // Build a small map: tutor_id -> tutor full_name (from assignments)
+  const tutorNameById = new Map<string, string>();
+  (assignments || []).forEach((a: any) => {
+    if (a.tutor_id && a.tutor?.full_name) {
+      tutorNameById.set(a.tutor_id, a.tutor.full_name);
+    }
+  });
+
   // 3) Load tutor resources for these tutor_ids
   const { data: resources, error: resourcesError } = await supabase
     .from("tutor_resources")
@@ -149,18 +166,20 @@ export default async function StudentResourcesPage() {
             {tutorIds.length > 1 ? "s" : ""}.
           </p>
           <p className="text-xs text-gray-600 mb-3">
-            Your admin has created one‑to‑one assignments linking you with these
-            tutor IDs:
+            Your admin has created one‑to‑one assignments linking you with:
           </p>
           <div className="flex flex-wrap gap-1 text-[11px]">
-            {tutorIds.map((id) => (
-              <span
-                key={id}
-                className="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-[#512d7c]"
-              >
-                Tutor: {id}
-              </span>
-            ))}
+            {tutorIds.map((id) => {
+              const name = tutorNameById.get(id);
+              return (
+                <span
+                  key={id}
+                  className="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-[#512d7c]"
+                >
+                  {name ? `Tutor: ${name}` : "Assigned tutor"}
+                </span>
+              );
+            })}
           </div>
         </section>
 
@@ -184,43 +203,52 @@ export default async function StudentResourcesPage() {
               </p>
             </div>
             <div className="grid gap-5 md:grid-cols-2">
-              {resources!.map((r: any) => (
-                <a
-                  key={r.id}
-                  href={`/dashboard/student/resources/${r.id}`}
-                  className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col justify-between hover:shadow-md hover:border-[#f2b42c] transition-all"
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#512d7c]">
-                        Tutor resource
-                      </span>
-                      <span className="text-[10px] text-gray-500">
-                        Tutor ID: {r.tutor_id}
-                      </span>
+              {resources!.map((r: any) => {
+                const tutorName = r.tutor_id
+                  ? tutorNameById.get(r.tutor_id)
+                  : null;
+
+                return (
+                  <a
+                    key={r.id}
+                    href={`/dashboard/student/resources/${r.id}`}
+                    className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col justify-between hover:shadow-md hover:border-[#f2b42c] transition-all"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#512d7c]">
+                          Tutor resource
+                        </span>
+                        {tutorName && (
+                          <span className="text-[10px] text-gray-500">
+                            By {tutorName}
+                          </span>
+                        )}
+                      </div>
+
+                      <h2 className="text-sm font-semibold text-[#512d7c] mb-1">
+                        {r.title || "Untitled resource"}
+                      </h2>
+                      {r.content && (
+                        <p className="text-xs text-gray-600 line-clamp-3">
+                          {r.content}
+                        </p>
+                      )}
                     </div>
 
-                    <h2 className="text-sm font-semibold text-[#512d7c] mb-1">
-                      {r.title || "Untitled resource"}
-                    </h2>
-                    {r.content && (
-                      <p className="text-xs text-gray-600 line-clamp-3">
-                        {r.content}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="mt-3 flex items-center justify-between text-[11px] text-gray-500">
-                    <span>
-                      Created on {new Date(r.created_at).toLocaleDateString()}
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-[#f2b42c] font-semibold">
-                      View details
-                      <span aria-hidden="true">→</span>
-                    </span>
-                  </div>
-                </a>
-              ))}
+                    <div className="mt-3 flex items-center justify-between text-[11px] text-gray-500">
+                      <span>
+                        Created on{" "}
+                        {new Date(r.created_at).toLocaleDateString()}
+                      </span>
+                      <span className="inline-flex items-center gap-1 text-[#f2b42c] font-semibold">
+                        View details
+                        <span aria-hidden="true">→</span>
+                      </span>
+                    </div>
+                  </a>
+                );
+              })}
             </div>
           </section>
         )}
