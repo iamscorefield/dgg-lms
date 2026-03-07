@@ -58,7 +58,7 @@ export default async function StudentResourcesPage() {
     );
   }
 
-  // 2) Get assignments for these enrollments
+  // 2) Get assignments for these enrollments, including tutor profile name
   const { data: assignments, error: assignmentsError } = await supabase
     .from("one_on_one_assignments")
     .select(
@@ -117,7 +117,7 @@ export default async function StudentResourcesPage() {
     );
   }
 
-  // Build a small map: tutor_id -> tutor full_name (from assignments)
+  // Map tutor_id -> tutor full_name for displaying names instead of UUIDs
   const tutorNameById = new Map<string, string>();
   (assignments || []).forEach((a: any) => {
     if (a.tutor_id && a.tutor?.full_name) {
