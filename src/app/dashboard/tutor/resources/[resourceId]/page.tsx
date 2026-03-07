@@ -183,8 +183,7 @@ export default async function TutorResourceDetailPage(
                 {resource.title}
               </h1>
               <p className="text-[11px] text-gray-500 mt-1">
-                Created on{" "}
-                {new Date(resource.created_at).toLocaleDateString()}
+                Created on {new Date(resource.created_at).toLocaleDateString()}
               </p>
             </div>
             <a
@@ -299,8 +298,8 @@ export default async function TutorResourceDetailPage(
                   <div className="space-y-2">
                     {m.items.length === 0 ? (
                       <p className="text-[11px] text-gray-500">
-                        No items yet. Add lessons, PDFs or links using the
-                        form below.
+                        No items yet. Add lessons, PDFs or links using the form
+                        below.
                       </p>
                     ) : (
                       m.items.map((it) => (
