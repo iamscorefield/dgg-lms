@@ -1,6 +1,3 @@
-"use client";
-
-import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import { createServer } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
@@ -18,7 +15,11 @@ type ModuleRow = {
   }[];
 };
 
-async function loadData(resourceId: string) {
+export default async function StudentResourceDetailPage(
+  props: { params: Promise<{ resourceId: string }> }
+) {
+  const { resourceId } = await props.params;
+
   const supabase = await createServer();
   const {
     data: { session },
@@ -140,36 +141,6 @@ async function loadData(resourceId: string) {
       })) ?? [],
   }));
 
-  return { resource, tutorName, modules };
-}
-
-export default function StudentResourceDetailPageWrapper(
-  props: { params: { resourceId: string } }
-) {
-  // This wrapper lets us keep async data loading in a server action-style
-  // while enabling client-side modals via useState.
-  return <StudentResourceDetailPageInner resourceId={props.params.resourceId} />;
-}
-
-function StudentResourceDetailPageInner({ resourceId }: { resourceId: string }) {
-  const [videoModalUrl, setVideoModalUrl] = useState<string | null>(null);
-  const [pdfModalUrl, setPdfModalUrl] = useState<string | null>(null);
-
-  // Because we can't call async directly in this client component,
-  // we rely on the server-side loader being inlined at build time via Next server components.
-  // In your current setup, you'd typically keep this page as server-only,
-  // but for simplicity here we'll assume React Server Components can handle this pattern.
-  // If you see build issues, we can split into a server component + client child.
-
-  // @ts-expect-error async server function used in RSC
-  const dataPromise = loadData(resourceId);
-
-  // This is a hacky pattern in TS, but matches how Next can stream server data.
-  // In practice, your app router will resolve the promise server-side.
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  // @ts-expect-error Suspense/server resolution
-  const { resource, tutorName, modules } = React.use(dataPromise);
-
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar role="student" />
@@ -208,8 +179,8 @@ function StudentResourceDetailPageInner({ resourceId }: { resourceId: string }) 
             </p>
           </header>
 
-          {/* Overview + main video/pdf */}
-          <section className="bg-white rounded-2xl shadow p-6 border border-gray-100 space-y-3">
+          {/* Overview + inline video/pdf */}
+          <section className="bg-white rounded-2xl shadow p-6 border border-gray-100 space-y-4">
             {resource.content ? (
               <div className="text-sm text-gray-800 whitespace-pre-line">
                 {resource.content}
@@ -220,35 +191,35 @@ function StudentResourceDetailPageInner({ resourceId }: { resourceId: string }) 
               </p>
             )}
 
-            {/* Main video link in modal */}
+            {/* Inline video (if video_url is embeddable, e.g. YouTube embed link) */}
             {resource.video_url && (
-              <div className="pt-2 border-t border-dashed border-gray-200">
+              <div className="pt-3 border-t border-dashed border-gray-200 space-y-2">
                 <p className="text-[11px] text-gray-500 mb-1">
-                  Main link / video from your tutor:
+                  Main video from your tutor:
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setVideoModalUrl(resource.video_url!)}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#f2b42c] hover:underline break-all"
-                >
-                  Watch video here →
-                </button>
+                <div className="aspect-video w-full bg-black rounded-xl overflow-hidden">
+                  <iframe
+                    src={resource.video_url}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
               </div>
             )}
 
-            {/* Main PDF/document in modal */}
+            {/* Inline PDF viewer */}
             {resource.pdf_url && (
-              <div className="pt-2 border-t border-dashed border-gray-200">
+              <div className="pt-3 border-t border-dashed border-gray-200 space-y-2">
                 <p className="text-[11px] text-gray-500 mb-1">
                   Main PDF / document from your tutor:
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setPdfModalUrl(resource.pdf_url!)}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#f2b42c] hover:underline break-all"
-                >
-                  Read PDF here →
-                </button>
+                <div className="w-full h-[70vh] border border-gray-200 rounded-xl overflow-hidden">
+                  <iframe
+                    src={resource.pdf_url}
+                    className="w-full h-full"
+                  />
+                </div>
               </div>
             )}
           </section>
@@ -317,60 +288,6 @@ function StudentResourceDetailPageInner({ resourceId }: { resourceId: string }) 
           </section>
         </div>
       </div>
-
-      {/* Video modal */}
-      {videoModalUrl && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full mx-4 overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
-              <h2 className="text-sm font-semibold text-[#512d7c]">
-                Video from your tutor
-              </h2>
-              <button
-                type="button"
-                onClick={() => setVideoModalUrl(null)}
-                className="text-xs text-gray-500 hover:text-gray-800"
-              >
-                Close ✕
-              </button>
-            </div>
-            <div className="aspect-video bg-black">
-              <iframe
-                src={videoModalUrl}
-                className="w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* PDF modal */}
-      {pdfModalUrl && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full h-[80vh] mx-4 overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
-              <h2 className="text-sm font-semibold text-[#512d7c]">
-                PDF from your tutor
-              </h2>
-              <button
-                type="button"
-                onClick={() => setPdfModalUrl(null)}
-                className="text-xs text-gray-500 hover:text-gray-800"
-              >
-                Close ✕
-              </button>
-            </div>
-            <div className="flex-1">
-              <iframe
-                src={pdfModalUrl}
-                className="w-full h-full"
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
