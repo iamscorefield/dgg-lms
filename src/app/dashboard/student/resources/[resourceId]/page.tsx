@@ -1,6 +1,7 @@
 import Sidebar from "@/components/Sidebar";
 import { createServer } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
+import ResourceMediaModal from "@/components/ResourceMediaModal";
 
 type ModuleRow = {
   id: string;
@@ -179,7 +180,7 @@ export default async function StudentResourceDetailPage(
             </p>
           </header>
 
-          {/* Overview + inline video/pdf */}
+          {/* Overview + media buttons/modal */}
           <section className="bg-white rounded-2xl shadow p-6 border border-gray-100 space-y-4">
             {resource.content ? (
               <div className="text-sm text-gray-800 whitespace-pre-line">
@@ -191,37 +192,10 @@ export default async function StudentResourceDetailPage(
               </p>
             )}
 
-            {/* Inline video (if video_url is embeddable, e.g. YouTube embed link) */}
-            {resource.video_url && (
-              <div className="pt-3 border-t border-dashed border-gray-200 space-y-2">
-                <p className="text-[11px] text-gray-500 mb-1">
-                  Main video from your tutor:
-                </p>
-                <div className="aspect-video w-full bg-black rounded-xl overflow-hidden">
-                  <iframe
-                    src={resource.video_url}
-                    className="w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Inline PDF viewer */}
-            {resource.pdf_url && (
-              <div className="pt-3 border-t border-dashed border-gray-200 space-y-2">
-                <p className="text-[11px] text-gray-500 mb-1">
-                  Main PDF / document from your tutor:
-                </p>
-                <div className="w-full h-[70vh] border border-gray-200 rounded-xl overflow-hidden">
-                  <iframe
-                    src={resource.pdf_url}
-                    className="w-full h-full"
-                  />
-                </div>
-              </div>
-            )}
+            <ResourceMediaModal
+              videoUrl={resource.video_url}
+              pdfUrl={resource.pdf_url}
+            />
           </section>
 
           {/* Modules + items */}
