@@ -2,18 +2,21 @@ import Sidebar from "@/components/Sidebar";
 import { createServer } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 import ResourceMediaModal from "@/components/ResourceMediaModal";
+import ResourceItemModal from "@/components/ResourceItemModal";
+
+type ItemRow = {
+  id: string;
+  item_type: string;
+  title: string;
+  file_url: string | null;
+};
 
 type ModuleRow = {
   id: string;
   title: string | null;
   summary: string | null;
   sort_order: number | null;
-  items: {
-    id: string;
-    item_type: string;
-    title: string;
-    file_url: string | null;
-  }[];
+  items: ItemRow[];
 };
 
 export default async function StudentResourceDetailPage(
@@ -134,12 +137,17 @@ export default async function StudentResourceDetailPage(
     summary: m.summary,
     sort_order: m.sort_order,
     items:
-      (m.tutor_resource_items || []).map((it: any) => ({
-        id: it.id,
-        item_type: it.item_type,
-        title: it.title,
-        file_url: it.file_url,
-      })) ?? [],
+      (m.tutor_resource_items || [])
+        .sort(
+          (a: any, b: any) =>
+            (a.sort_order ?? 0) - (b.sort_order ?? 0)
+        )
+        .map((it: any) => ({
+          id: it.id,
+          item_type: it.item_type,
+          title: it.title,
+          file_url: it.file_url,
+        })) ?? [],
   }));
 
   return (
@@ -180,7 +188,7 @@ export default async function StudentResourceDetailPage(
             </p>
           </header>
 
-          {/* Overview + media buttons/modal */}
+          {/* Overview + main media modal */}
           <section className="bg-white rounded-2xl shadow p-6 border border-gray-100 space-y-4">
             {resource.content ? (
               <div className="text-sm text-gray-800 whitespace-pre-line">
@@ -198,10 +206,10 @@ export default async function StudentResourceDetailPage(
             />
           </section>
 
-          {/* Modules + items */}
+          {/* Modules + items (each item opens its own modal) */}
           <section className="space-y-4">
             {modules.length === 0 ? (
-              <div className="bg-white rounded-2xl shadow p-6 border border-gray-100">
+              <div className="bg-white rounded-2xl_shadow p-6 border border-gray-100">
                 <p className="text-sm text-gray-700">
                   This resource does not have any modules yet. Check back later
                   after your tutor adds more structure.
@@ -233,27 +241,7 @@ export default async function StudentResourceDetailPage(
                         No items yet in this module.
                       </p>
                     ) : (
-                      m.items.map((it) => (
-                        <a
-                          key={it.id}
-                          href={`/dashboard/student/resources/${resource.id}/${m.id}/${it.id}`}
-                          className="flex items-center justify-between px-3 py-2 rounded-lg border border-gray-100 hover:border-[#f2b42c] hover:bg-yellow-50/40 transition text-xs"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-purple-50 text-[10px] font-semibold text-[#512d7c] uppercase">
-                              {it.item_type.slice(0, 1)}
-                            </span>
-                            <span className="font-semibold text-gray-800">
-                              {it.title}
-                            </span>
-                          </div>
-                          {it.file_url && (
-                            <span className="text-[10px] text-gray-500 truncate max-w-[160px]">
-                              {it.file_url}
-                            </span>
-                          )}
-                        </a>
-                      ))
+                      <ResourceItemModal items={m.items} />
                     )}
                   </div>
                 </div>
