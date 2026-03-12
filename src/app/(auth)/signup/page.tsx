@@ -6,10 +6,13 @@ import Image from "next/image";
 import SignupForm from "@/components/auth/SignupForm";
 import { createBrowser } from "@/lib/supabase-client";
 
+export type RoleChoice = "student" | "tutor";
+
 export default function SignupPage() {
   const supabase = createBrowser();
   const router = useRouter();
   const [checkingSession, setCheckingSession] = useState(true);
+  const [roleChoice, setRoleChoice] = useState<RoleChoice>("student");
 
   const handleScrollToForm = () => {
     const el = document.getElementById("signup-form");
@@ -17,6 +20,11 @@ export default function SignupPage() {
   };
 
   const handleOAuthSignup = async () => {
+    if (typeof window !== "undefined") {
+      // remember what the user chose (student / tutor)
+      window.localStorage.setItem("signup_role", roleChoice);
+    }
+
     const redirectTo =
       typeof window !== "undefined"
         ? `${window.location.origin}/auth/callback`
@@ -87,6 +95,35 @@ export default function SignupPage() {
             </h2>
           </div>
 
+          {/* Role choice shared between email & Google */}
+          <div>
+            <p className="block text-lg font-bold text-[#512d7c] mb-2">
+              I want to sign up as
+            </p>
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2 text-black">
+                <input
+                  type="radio"
+                  name="role"
+                  value="student"
+                  checked={roleChoice === "student"}
+                  onChange={() => setRoleChoice("student")}
+                />
+                Student
+              </label>
+              <label className="flex items-center gap-2 text-black">
+                <input
+                  type="radio"
+                  name="role"
+                  value="tutor"
+                  checked={roleChoice === "tutor"}
+                  onChange={() => setRoleChoice("tutor")}
+                />
+                Tutor
+              </label>
+            </div>
+          </div>
+
           {/* Social / Email options */}
           <div className="space-y-4">
             {/* Google only */}
@@ -118,7 +155,7 @@ export default function SignupPage() {
 
           {/* Email form section */}
           <div id="signup-form">
-            <SignupForm />
+            <SignupForm initialRole={roleChoice} />
           </div>
 
           <p className="text-center text-black mt-6">

@@ -93,7 +93,7 @@ export default async function PreCourseDetailPage(
               ← Back to prep courses
             </a>
             <span className="hidden sm:inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700">
-              Free prep course
+              Prep course
             </span>
           </div>
 
