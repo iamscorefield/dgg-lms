@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createBrowser } from "@/lib/supabase-client";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -24,6 +24,11 @@ export default function SignupForm({ initialRole = "student" }: SignupFormProps)
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  // keep form role in sync with page toggle
+  useEffect(() => {
+    setRoleChoice(initialRole);
+  }, [initialRole]);
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -36,7 +41,6 @@ export default function SignupForm({ initialRole = "student" }: SignupFormProps)
       options: {
         data: {
           full_name: fullName,
-          // still store role hint in metadata (not for security)
           role: roleChoice === "student" ? "student" : "pending_tutor",
         },
         emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`,
