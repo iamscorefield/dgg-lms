@@ -21,7 +21,7 @@ export default function SignupPage() {
 
   const handleOAuthSignup = async () => {
     if (typeof window !== "undefined") {
-      // remember what the user chose (student / tutor)
+      // remember if they chose student or tutor
       window.localStorage.setItem("signup_role", roleChoice);
     }
 
@@ -62,7 +62,7 @@ export default function SignupPage() {
       <div className="relative w-full lg:w-1/2 hidden lg:flex items-center justify-center bg-[#f5f5f5]">
         <Image
           src="/images/signup.jpg"
-          alt="Sign up as Student"
+          alt="Sign up"
           width={650}
           height={1000}
           className="h-auto w-auto max-h-[500vh] object-contain m-4 rounded-3xl"
@@ -90,43 +90,45 @@ export default function SignupPage() {
               </span>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-bold text-[#512d7c] mb-4">
-              Sign up as a Student/Tutor to Get Started
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#512d7c] mb-1">
+              Create your DGG Academy account
             </h2>
-          </div>
 
-          {/* Role choice shared between email & Google */}
-          <div>
-            <p className="block text-lg font-bold text-[#512d7c] mb-2">
-              I want to sign up as
-            </p>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 text-black">
-                <input
-                  type="radio"
-                  name="role"
-                  value="student"
-                  checked={roleChoice === "student"}
-                  onChange={() => setRoleChoice("student")}
-                />
-                Student
-              </label>
-              <label className="flex items-center gap-2 text-black">
-                <input
-                  type="radio"
-                  name="role"
-                  value="tutor"
-                  checked={roleChoice === "tutor"}
-                  onChange={() => setRoleChoice("tutor")}
-                />
-                Tutor
-              </label>
+            {/* Shared role toggle */}
+            <div className="mt-3">
+              <p className="block text-base font-semibold text-[#512d7c] mb-2">
+                I want to sign up as
+              </p>
+              <div className="flex gap-4 justify-center">
+                <button
+                  type="button"
+                  onClick={() => setRoleChoice("student")}
+                  className={`px-4 py-2 rounded-full border text-sm font-medium ${
+                    roleChoice === "student"
+                      ? "bg-[#512d7c] text-white border-[#512d7c]"
+                      : "bg-white text-[#512d7c] border-gray-300"
+                  }`}
+                >
+                  Student
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRoleChoice("tutor")}
+                  className={`px-4 py-2 rounded-full border text-sm font-medium ${
+                    roleChoice === "tutor"
+                      ? "bg-[#512d7c] text-white border-[#512d7c]"
+                      : "bg-white text-[#512d7c] border-gray-300"
+                  }`}
+                >
+                  Tutor
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Social / Email options */}
-          <div className="space-y-4">
-            {/* Google only */}
+          <div className="space-y-4 mt-4">
+            {/* Google signup uses same roleChoice */}
             <button
               type="button"
               onClick={handleOAuthSignup}
@@ -134,7 +136,8 @@ export default function SignupPage() {
             >
               <span className="text-2xl font-bold text-red-600">G</span>
               <span className="font-medium text-black">
-                Continue with Google
+                Continue with Google as{" "}
+                {roleChoice === "student" ? "Student" : "Tutor"}
               </span>
             </button>
 
@@ -146,7 +149,8 @@ export default function SignupPage() {
             >
               <span className="text-2xl">✉️</span>
               <span className="font-medium text-black">
-                Continue with email
+                Continue with email as{" "}
+                {roleChoice === "student" ? "Student" : "Tutor"}
               </span>
             </button>
           </div>
