@@ -5,6 +5,7 @@ import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import TopHeader from "@/components/TopHeader";
 import { Toaster } from "react-hot-toast";
+import Script from "next/script"; // 🔥 IMPORTED NEXT.JS SCRIPT PACK FOR CLEANER LOADING
 
 export function LayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -16,7 +17,8 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
     pathname.startsWith("/tutor");
 
   return (
-    <body className="bg-white min-h-screen flex flex-col">
+    // 🔥 FIXED: Changed from <body> to <div> to stop invalid nested body tags crashing React hydration
+    <div className="bg-white min-h-screen flex flex-col">
       {!hideChrome && (
         <>
           {/* Top header bar */}
@@ -35,7 +37,9 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
       {!hideChrome && <Footer />}
 
       <Toaster position="top-center" />
-      <script src="https://js.paystack.co/v2/inline.js" async></script>
-    </body>
+      
+      {/* 🔥 OPTIMIZED: Handled Paystack execution natively via Next.js Script optimization Engine */}
+      <Script src="https://js.paystack.co/v2/inline.js" strategy="afterInteractive" />
+    </div>
   );
 }
