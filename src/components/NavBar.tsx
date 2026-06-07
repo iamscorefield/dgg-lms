@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, FormEvent } from "react";
 
 const mainCoursesList = [
   { name: "Full-Stack Software Engineering", path: "/signup?track=software" },
@@ -21,13 +21,14 @@ const prepCoursesList = [
 ];
 
 export default function NavBar() {
-  const [activeMenu, setActiveMenu] = useState(null); // 'main' or 'prep'
+  const [activeMenu, setActiveMenu] = useState<"main" | "prep" | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const menuRef = useRef(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
+    // 🔥 FIXED: Added explicit MouseEvent type to parameter to prevent compilation errors
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setActiveMenu(null);
       }
     }
@@ -35,7 +36,8 @@ export default function NavBar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSearchSubmit = (e) => {
+  // 🔥 FIXED: Added explicit FormEvent type to handle search submissions cleanly
+  const handleSearchSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       window.location.href = `/signup?search=${encodeURIComponent(searchQuery)}`;
