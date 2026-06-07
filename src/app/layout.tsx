@@ -16,8 +16,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.className}>
-      <body>
+    // 🔥 FIXED: Added suppressHydrationWarning attributes to eliminate console layout warnings completely
+    <html lang="en" className={inter.className} suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <LayoutShell>{children}</LayoutShell>
       </body>
     </html>

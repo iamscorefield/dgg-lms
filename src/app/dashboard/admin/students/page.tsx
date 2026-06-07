@@ -3,6 +3,9 @@ import { createServer } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 import { StudentRowClientProps, StudentRowClient } from "@/components/admin/StudentRowClient";
 
+// 🔥 FIXED: Force Next.js to kill its server cache and pull fresh data straight from Supabase on every page refresh!
+export const dynamic = "force-dynamic";
+
 type StudentRow = StudentRowClientProps["student"];
 
 export default async function AdminStudentsPage() {
@@ -35,95 +38,99 @@ export default async function AdminStudentsPage() {
     redirect("/dashboard");
   }
 
-  const { data: students, error: studentsError } = await supabase
+  const { data: allProfiles, error: studentsError } = await supabase
     .from("profiles")
     .select(
       `
       id,
       full_name,
+      email,
       avatar_url,
-      phone,
-      department,
       bio,
       created_at,
       status,
       status_reason,
       last_login_at,
-      paid_enrollment_count
+      paid_enrollment_count,
+      membership_status,
+      role
     `
     )
-    .eq("role", "student")
     .order("created_at", { ascending: false });
 
   if (studentsError) {
     console.error("Error loading students:", studentsError);
   }
 
+  const students = (allProfiles || []).filter(
+    (profile) => profile.role !== "admin" && profile.role !== "tutor"
+  );
+
   const hasStudents = students && students.length > 0;
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 overflow-hidden">
       <Sidebar role="admin" />
 
-      <div className="flex-1 lg:ml-64 p-6 lg:p-10">
+      <div className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-10 w-full overflow-hidden">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-[#512d7c]">
+            <h1 className="text-2xl sm:text-3xl font-black text-[#512d7c] tracking-tight">
               Manage Students
             </h1>
-            <p className="text-sm text-gray-600 mt-1">
-              View and manage all registered students on DGG Academy.
+            <p className="text-xs sm:text-sm font-medium text-gray-600 mt-1">
+              View and manage all registered student profile tiers on DGG Academy.
             </p>
           </div>
         </div>
 
         {!hasStudents ? (
-          <div className="bg-white rounded-2xl shadow p-6">
+          <div className="bg-white rounded-2xl border border-slate-200/60 p-8 shadow-xs text-center max-w-md mx-auto">
             <p className="text-sm text-gray-700">
-              No students found yet. Students will appear here after they sign
-              up.
+              No students found yet. Students will appear here after they sign up.
             </p>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow overflow-hidden">
-            <table className="min-w-full text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left font-semibold text-[#512d7c]">
-                    Name
-                  </th>
-                  <th className="px-4 py-3 text-left font-semibold text-[#512d7c]">
-                    Department
-                  </th>
-                  <th className="px-4 py-3 text-left font-semibold text-[#512d7c]">
-                    Phone
-                  </th>
-                  <th className="px-4 py-3 text-left font-semibold text-[#512d7c]">
-                    Joined
-                  </th>
-                  <th className="px-4 py-3 text-left font-semibold text-[#512d7c]">
-                    Last login
-                  </th>
-                  <th className="px-4 py-3 text-left font-semibold text-[#512d7c]">
-                    Enrollments / progress
-                  </th>
-                  <th className="px-4 py-3 text-left font-semibold text-[#512d7c]">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-right font-semibold text-[#512d7c]">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {students!.map((s: any) => (
-                  <StudentRowClient
-                    key={s.id}
-                    student={s as StudentRow}
-                  />
-                ))}
-              </tbody>
-            </table>
+          <div className="w-full overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
+            <div className="w-full overflow-x-auto clear-both block whitespace-nowrap custom-scrollbar">
+              
+              <table className="w-full min-w-[850px] border-collapse text-left text-sm table-auto">
+                <thead className="bg-slate-50/80 border-b border-slate-200 text-[#512d7c] font-black uppercase tracking-widest text-[10px]">
+                  <tr>
+                    <th className="px-6 py-4 text-left">
+                      Student Details
+                    </th>
+                    <th className="px-6 py-4 text-left">
+                      Joined
+                    </th>
+                    <th className="px-6 py-4 text-left">
+                      Last login
+                    </th>
+                    <th className="px-6 py-4 text-left">
+                      Enrollments / progress
+                    </th>
+                    <th className="px-6 py-4 text-center">
+                      Membership Status
+                    </th>
+                    <th className="px-6 py-4 text-left">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-center">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                  {students.map((s: any) => (
+                    <StudentRowClient
+                      key={s.id}
+                      student={s as StudentRow}
+                    />
+                  ))}
+                </tbody>
+              </table>
+
+            </div>
           </div>
         )}
       </div>
