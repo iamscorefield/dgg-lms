@@ -9,16 +9,48 @@ export default function PrepIntroPage() {
   const [loading, setLoading] = useState(false);
   const role: "student" | "tutor" | "admin" = "student";
 
-  // The 8 Core Prep Courses Curriculum Data Structure Array
+  // 🔥 FIXED: Updated to align exactly with image_d0d85d.png foundational modules
   const prepCourses = [
-    { id: "01", title: "Introduction to Digital Literacy & Ecosystems", desc: "Master fundamental computing terminology, internet architectural frameworks, and professional workflow tools." },
-    { id: "02", title: "Foundations of Web Architecture (HTML5 & CSS3)", desc: "Learn structural semantic markup and advanced responsive layout styling modules from absolute scratch." },
-    { id: "03", title: "UI/UX Design Systems & Product Wireframing", desc: "Understand component layout principles, modern typography guides, and sleek prototype design frameworks." },
-    { id: "04", title: "Programming Logic & Basics of JavaScript", desc: "Build strong algorithmic habits using computational parameters, variable structures, and conditional array handling." },
-    { id: "05", title: "Modern Framework Architecture with React & Next.js", desc: "Discover declarative dynamic web composition using modular client/server code structures cleanly." },
-    { id: "06", title: "Backend Essentials & Node.js Server Mechanics", desc: "Construct asynchronous request-response handlers, manage data packages, and secure API integration links." },
-    { id: "07", title: "Relational Databases & SQL Schema Management", desc: "Understand structural query patterns, manage relationship linkages, and read database ledger pipelines." },
-    { id: "08", title: "Cloud Integration & Database Backend with Supabase", desc: "Wire up live client sessions, manage asset storage buckets, and initialize direct cloud storage tables." }
+    { 
+      id: "01", 
+      title: "Basic Computer and Internet Skills for Absolute Beginners", 
+      desc: "Master essential hardware concepts, operating system navigation, and baseline internet operations confidently." 
+    },
+    { 
+      id: "02", 
+      title: "Getting Ready for Online Learning", 
+      desc: "Set up professional digital workspace communication architectures and master asynchronous learning frameworks." 
+    },
+    { 
+      id: "03", 
+      title: "Introduction to Modern Techie Journey", 
+      desc: "Discover multi-tier industry career paths and plan your technical track development timeline." 
+    },
+    { 
+      id: "04", 
+      title: "Introduction to No-Code Tools & Building Your First App or Website", 
+      desc: "Design responsive visual wireframes and deploy functional web applications without writing raw code lines." 
+    },
+    { 
+      id: "05", 
+      title: "Cybersecurity Fundamentals: Understanding Cybersecurity Basics", 
+      desc: "Protect sensitive user accounts, master encryption protocols, and avoid standard online vulnerability traps." 
+    },
+    { 
+      id: "06", 
+      title: "Introduction to Artificial Intelligence (AI)", 
+      desc: "Harness advanced prompt engineering patterns to automate complex creative workflows and research cycles." 
+    },
+    { 
+      id: "07", 
+      title: "Get To Know Legal Registration of Business in Nigeria", 
+      desc: "Navigate Corporate Affairs Commission (CAC) legal frameworks to register businesses and establish corporate structures legally." 
+    },
+    { 
+      id: "08", 
+      title: "Digital Monetization – Secure Online Opportunities...", 
+      desc: "Build optimized freelance marketplace channels, create bidding loops, and configure international payment pipelines securely." 
+    }
   ];
 
   const handlePaystack = async () => {
@@ -42,7 +74,7 @@ export default function PrepIntroPage() {
         return;
       }
 
-      const amount = 75000;
+      const amount = 75000; // 🔥 PRESERVED: Your verified 75k structural token pricing setting
       const handler = (window as any).PaystackPop.setup({
         key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
         email,
@@ -74,15 +106,14 @@ export default function PrepIntroPage() {
   };
 
   return (
-    // 🔥 FIXED: Background strictly updated to pure white theme setup
-    <div className="flex min-h-screen bg-white selection:bg-[#512d7c]/10 text-slate-800">
+    <div className="flex min-h-screen bg-white selection:bg-[#512d7c]/10 text-slate-800 font-sans">
       <Sidebar role={role} />
 
       {/* Main Container Workspace */}
       <div className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-10 w-full overflow-hidden">
         <div className="max-w-5xl mx-auto">
           
-          {/* 🌟 Premium Hero Banner Card Layout */}
+          {/* Premium Hero Banner Card Layout */}
           <section className="relative overflow-hidden bg-slate-50 rounded-3xl border border-slate-200/70 p-6 sm:p-8 lg:p-12 mb-8 shadow-2xs">
             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#f2b42c]/10 to-transparent rounded-bl-full pointer-events-none" />
             
@@ -94,9 +125,7 @@ export default function PrepIntroPage() {
                 Start your tech journey with absolute confidence
               </h1>
               <p className="text-xs sm:text-sm font-medium text-slate-500 max-w-2xl mt-3 leading-relaxed">
-                This comprehensive prep program is engineered specifically for beginners looking for a direct, 
-                flawless roadmap into modern software engineering frameworks. Bypass random tutorial loops, 
-                master industry core vectors, and forge winning portfolio habits from day one.
+                This foundational program is engineered specifically for beginners looking for an unshakeable starting baseline before selecting advanced tracks. Bypass random tutorial loops, master ecosystem workflows, and forge winning production habits from day one.
               </p>
             </div>
           </section>
@@ -117,18 +146,20 @@ export default function PrepIntroPage() {
                       <path d="M8 5v14l11-7z" />
                     </svg>
                   </div>
+                  <span className="text-7xl font-black text-white/5 tracking-tighter absolute select-none pointer-events-none uppercase">
+                    DGG
+                  </span>
                   <span className="text-[11px] font-black uppercase tracking-widest text-slate-400 mt-4 font-mono z-10 group-hover:text-white transition-colors">
                     DGG Academy Intro Matrix Node
                   </span>
                 </div>
               </div>
               <p className="mt-4 text-xs font-medium text-slate-400 leading-relaxed italic border-t border-slate-200/60 pt-3">
-                {/* 🔥 FIXED: Explicitly references the 8 prep courses curriculum tracks */}
-                Inside this operational briefing, your technical instructors map out course milestones, platform execution tools, and explain exactly how these 8 foundational prep paths stack up to build your skills.
+                Inside this operational briefing, your instructors map out module milestones, platform execution tools, and explain exactly how these 8 foundational paths launch your journey.
               </p>
             </div>
 
-            {/* 💎 Upgraded Payment Pricing Widget Box */}
+            {/* Upgraded Payment Pricing Widget Box */}
             <div className="bg-slate-50 rounded-3xl border-2 border-[#512d7c]/20 p-6 sm:p-8 shadow-2xs text-left relative overflow-hidden h-full flex flex-col justify-between">
               <div className="absolute top-0 right-0 bg-[#512d7c] text-white font-black uppercase text-[9px] tracking-widest px-3 py-1 rounded-bl-xl shadow-xs">
                 Lifetime Access
@@ -144,7 +175,7 @@ export default function PrepIntroPage() {
                 
                 <div className="my-5 flex items-baseline gap-1.5">
                   <span className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                    🇲🇬 ₦75,000
+                    ₦75,000
                   </span>
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider line-through">
                     ₦120,000
@@ -152,15 +183,14 @@ export default function PrepIntroPage() {
                 </div>
 
                 <p className="text-xs font-medium text-slate-500 leading-relaxed mb-5">
-                  Unlock permanent unthrottled access clearance into our full suite of learning nodes with zero future maintenance rates.
+                  Unlock permanent unthrottled access clearance into our 8 foundational modules with zero future subscription rates.
                 </p>
 
-                {/* 🔥 FIXED: List benefits updated precisely to match the 8 core tracks profile criteria */}
                 <ul className="text-xs font-bold text-slate-600 space-y-2.5 mb-6 border-t border-b border-slate-200/60 py-4">
-                  <li className="flex items-center gap-2.5"><span className="text-emerald-500 text-sm">✓</span> Permanent Access to 8 Prep Courses</li>
-                  <li className="flex items-center gap-2.5"><span className="text-emerald-500 text-sm">✓</span> Step-by-Step Practical Learning Roadmap</li>
-                  <li className="flex items-center gap-2.5"><span className="text-emerald-500 text-sm">✓</span> Direct Technical Instructor Assignment Portals</li>
-                  <li className="flex items-center gap-2.5"><span className="text-emerald-500 text-sm">✓</span> Personalized Dynamic Cohort Peer Dashboard</li>
+                  <li className="flex items-center gap-2.5"><span className="text-emerald-500 text-sm">✓</span> Access to 8 Core Prep Disciplines</li>
+                  <li className="flex items-center gap-2.5"><span className="text-emerald-500 text-sm">✓</span> Step-by-Step Practical Blueprint Sequence</li>
+                  <li className="flex items-center gap-2.5"><span className="text-emerald-500 text-sm">✓</span> Real-world Project Portfolios &amp; Monetization</li>
+                  <li className="flex items-center gap-2.5"><span className="text-emerald-500 text-sm">✓</span> Direct Technical Support Loops</li>
                 </ul>
               </div>
 
@@ -169,16 +199,9 @@ export default function PrepIntroPage() {
                   type="button"
                   onClick={handlePaystack}
                   disabled={loading}
-                  className="w-full inline-flex items-center justify-center rounded-xl bg-[#512d7c] hover:bg-[#402263] px-6 py-3.5 text-xs font-black uppercase tracking-widest text-white transition disabled:opacity-50 active:scale-98 shadow-sm shadow-[#512d7c]/10 cursor-pointer"
+                  className="w-full inline-flex items-center justify-center rounded-xl bg-[#512d7c] hover:bg-[#402263] px-6 py-3.5 text-xs font-black uppercase tracking-widest text-white transition disabled:opacity-50 active:scale-98 shadow-sm cursor-pointer"
                 >
-                  {loading ? (
-                    <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Initializing Secure Channel...</span>
-                    </div>
-                  ) : (
-                    "Authorize ₦75,000 Membership"
-                  )}
+                  {loading ? "Initializing Channel..." : "Authorize ₦75,000 Membership"}
                 </button>
                 <p className="text-[10px] text-center font-medium text-slate-400 leading-relaxed">
                   Securely processed via Paystack Infrastructure. Single billing footprint. No renewal rates apply.
@@ -188,21 +211,21 @@ export default function PrepIntroPage() {
 
           </section>
 
-          {/* 📚 NEW SECTION: Complete 8 Prep Course Cards Grid Layout */}
+          {/* 📚 Complete 8 Prep Course Cards Grid Layout */}
           <section className="mb-10 text-left">
             <div className="mb-6">
               <h2 className="text-base font-black text-slate-900 uppercase tracking-wide flex items-center gap-2">
-                <span>📖</span> Explore the 8 Core Prep Modules Curriculum
+                <span>📖</span> Included Foundational Modules (8 Core Tracks)
               </h2>
               <p className="text-xs font-medium text-slate-400 mt-0.5">
-                Each node is structured sequentially with structured learning, source files, and expert reviews.
+                Each node is structured sequentially with structured learning resources, real objectives, and custom mentor review gates.
               </p>
             </div>
             
             <div className="grid sm:grid-cols-2 gap-4">
               {prepCourses.map((course) => (
-                <div key={course.id} className="bg-slate-50/60 rounded-2xl border border-slate-200/60 p-5 hover:bg-slate-50 hover:border-slate-300 transition-all flex gap-4 group">
-                  <div className="h-10 w-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center font-mono font-black text-xs text-[#512d7c] shadow-2xs group-hover:bg-[#512d7c] group-hover:text-white transition-all flex-shrink-0">
+                <div key={course.id} className="bg-slate-50/60 rounded-2xl border border-slate-200/60 p-5 hover:bg-white hover:border-slate-300 transition-all flex gap-4 group shadow-3xs">
+                  <div className="h-10 w-10 rounded-xl bg-white border border-slate-200/80 flex items-center justify-center font-mono font-black text-xs text-[#512d7c] shadow-3xs group-hover:bg-[#512d7c] group-hover:text-white transition-all flex-shrink-0">
                     {course.id}
                   </div>
                   <div className="flex flex-col min-w-0">
@@ -218,7 +241,7 @@ export default function PrepIntroPage() {
             </div>
           </section>
 
-          {/* Timeline Milestones Roadmap Section View layout */}
+          {/* Journey Milestones Map Layout */}
           <section className="bg-slate-50 rounded-3xl border border-slate-200/70 p-6 sm:p-8 lg:p-10 mb-10 text-left">
             <h2 className="text-sm font-black text-slate-800 uppercase tracking-wide mb-6 flex items-center gap-2">
               <span>🎯</span> Your Journey in 4 Simple Milestones
@@ -227,52 +250,36 @@ export default function PrepIntroPage() {
               
               <div className="flex flex-col gap-2 p-4 bg-white rounded-2xl border border-slate-200/60 relative group hover:shadow-2xs transition-all">
                 <span className="absolute top-3 right-4 font-mono font-black text-slate-100 group-hover:text-[#f2b42c]/10 text-3xl transition-colors">01</span>
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 text-[11px] font-black text-[#f2b42c]">
-                  1
-                </span>
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 text-[11px] font-black text-[#f2b42c]">1</span>
                 <p className="font-bold text-slate-800 text-sm mt-1">Create Account</p>
-                <p className="text-slate-400 font-medium leading-relaxed">
-                  Secure your unique user signature key and finalize your tracking details.
-                </p>
+                <p className="text-slate-400 font-medium leading-relaxed">Secure your unique profile credentials and launch your personalized path entry setup.</p>
               </div>
 
               <div className="flex flex-col gap-2 p-4 bg-white rounded-2xl border border-slate-200/60 relative group hover:shadow-2xs transition-all">
                 <span className="absolute top-3 right-4 font-mono font-black text-slate-100 group-hover:text-[#512d7c]/10 text-3xl transition-colors">02</span>
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-purple-100 text-[11px] font-black text-[#512d7c]">
-                  2
-                </span>
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-purple-100 text-[11px] font-black text-[#512d7c]">2</span>
                 <p className="font-bold text-slate-800 text-sm mt-1">Clear Entry Fee</p>
-                <p className="text-slate-400 font-medium leading-relaxed">
-                  Process your flat one-time ₦75,000 fee to gain full database unlock clearance.
-                </p>
+                <p className="text-slate-400 font-medium leading-relaxed">Process your flat one-time entry token to gain complete permanent platform ecosystem access.</p>
               </div>
 
               <div className="flex flex-col gap-2 p-4 bg-white rounded-2xl border border-slate-200/60 relative group hover:shadow-2xs transition-all">
                 <span className="absolute top-3 right-4 font-mono font-black text-slate-100 group-hover:text-[#f2b42c]/10 text-3xl transition-colors">03</span>
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 text-[11px] font-black text-[#f2b42c]">
-                  3
-                </span>
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 text-[11px] font-black text-[#f2b42c]">3</span>
                 <p className="font-bold text-slate-800 text-sm mt-1">Execute Roadmap</p>
-                <p className="text-slate-400 font-medium leading-relaxed">
-                  Tackle the 8 core structured modules step by step with real code output logs.
-                </p>
+                <p className="text-slate-400 font-medium leading-relaxed">Tackle the 8 core structured curriculum modules sequentially using custom learning sandboxes.</p>
               </div>
 
               <div className="flex flex-col gap-2 p-4 bg-white rounded-2xl border border-slate-200/60 relative group hover:shadow-2xs transition-all">
                 <span className="absolute top-3 right-4 font-mono font-black text-slate-100 group-hover:text-[#512d7c]/10 text-3xl transition-colors">04</span>
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-purple-100 text-[11px] font-black text-[#512d7c]">
-                  4
-                </span>
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-purple-100 text-[11px] font-black text-[#512d7c]">4</span>
                 <p className="font-bold text-slate-800 text-sm mt-1">Advance Upward</p>
-                <p className="text-slate-400 font-medium leading-relaxed">
-                  Graduate confidently directly into hyper-focused project production builds.
-                </p>
+                <p className="text-slate-400 font-medium leading-relaxed">Graduate confidently directly into your selected high-demand core specialization sprint tier.</p>
               </div>
 
             </div>
           </section>
 
-          {/* Secondary Bottom Call-to-Action Vector Card Panel */}
+          {/* Secondary Bottom Call-to-Action Panel */}
           <section className="bg-gradient-to-r from-[#512d7c] to-[#361d53] rounded-3xl p-6 sm:p-8 text-center relative overflow-hidden shadow-md">
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_bottom_left,rgba(242,180,44,0.08),transparent)] pointer-events-none" />
             <h2 className="text-lg sm:text-xl font-black text-white tracking-tight mb-2">
@@ -285,7 +292,7 @@ export default function PrepIntroPage() {
               type="button"
               onClick={handlePaystack}
               disabled={loading}
-              className="inline-flex items-center justify-center rounded-xl bg-[#f2b42c] hover:bg-[#dfa21e] px-6 py-3 text-xs font-black uppercase tracking-widest text-black shadow-lg shadow-amber-500/10 transition disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center justify-center rounded-xl bg-[#f2b42c] hover:bg-[#dfa21e] px-6 py-3 text-xs font-black uppercase tracking-widest text-black shadow-lg transition disabled:opacity-50 cursor-pointer border-0"
             >
               {loading ? "Initializing..." : "Become a DGG Student (₦75,000)"}
             </button>

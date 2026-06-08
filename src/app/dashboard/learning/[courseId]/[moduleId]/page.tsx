@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createBrowser } from "@/lib/supabase-client";
 import Sidebar from "@/components/Sidebar";
+import toast from "react-hot-toast";
 
 type Lesson = {
   id: number;
@@ -62,14 +63,12 @@ function toYouTubeEmbed(url: string): string | null {
     let videoId: string | null = null;
 
     if (host === "youtube.com" || host === "m.youtube.com") {
-      // formats like /watch?v=ID or /embed/ID
       if (u.pathname === "/watch") {
         videoId = u.searchParams.get("v");
       } else if (u.pathname.startsWith("/embed/")) {
         videoId = u.pathname.split("/embed/")[1] || null;
       }
     } else if (host === "youtu.be") {
-      // short link
       videoId = u.pathname.slice(1) || null;
     }
 
@@ -87,7 +86,6 @@ function toGoogleDrivePreview(url: string): string | null {
     const u = new URL(url);
     const host = u.hostname.replace("www.", "");
 
-    // Typical Drive link: https://drive.google.com/file/d/FILE_ID/view?...
     if (host === "drive.google.com") {
       const parts = u.pathname.split("/");
       const fileIndex = parts.findIndex((p) => p === "d");
@@ -97,9 +95,8 @@ function toGoogleDrivePreview(url: string): string | null {
       }
     }
 
-    // Fallback: use Google Docs viewer with embedded=true
     const encoded = encodeURIComponent(url);
-    return `https://docs.google.com/gview?url=${encoded}&embedded=true`;
+    return `https://docs.google.com/gview?url={encoded}&embedded=true`;
   } catch {
     return null;
   }
@@ -121,11 +118,17 @@ export default function LearningModulePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string>("");
 
   const [activeTab, setActiveTab] = useState<"lesson" | "assessment">("lesson");
 
   const [showModal, setShowModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MediaItem | null>(null);
+
+  // 🔥 STATE ELEMENTS FOR LINK + NOTE INPUT SUBMISSIONS
+  const [projectLink, setProjectLink] = useState("");
+  const [studentNotes, setStudentNotes] = useState("");
+  const [emailSubmitting, setEmailSubmitting] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -141,12 +144,13 @@ export default function LearningModulePage() {
           throw new Error("You must be signed in to view this course.");
         }
         setUserId(user.id);
+        setUserEmail(user.email || "unknown@student.dglobalgrowthfield.com");
 
         // 2) module info
         const { data: moduleData, error: moduleError } = await supabase
           .from("course_modules")
           .select("id, title, course_id")
-          .eq("id", moduleId) // moduleId is a UUID string
+          .eq("id", moduleId)
           .single();
         if (moduleError || !moduleData) {
           throw new Error("Module not found.");
@@ -157,7 +161,7 @@ export default function LearningModulePage() {
         const { data: lessonsData, error: lessonsError } = await supabase
           .from("module_lessons")
           .select("*")
-          .eq("module_id", moduleId) // moduleId is a UUID string
+          .eq("module_id", moduleId)
           .order("sort_order", { ascending: true });
         if (lessonsError) {
           console.error("Lessons error:", lessonsError);
@@ -166,12 +170,11 @@ export default function LearningModulePage() {
         setLessons((lessonsData || []) as Lesson[]);
 
         // 4) assessments
-        const { data: assessmentsData, error: assessmentsError } =
-          await supabase
-            .from("module_assessments")
-            .select("*")
-            .eq("module_id", moduleId) // moduleId is a UUID string
-            .order("sort_order", { ascending: true });
+        const { data: assessmentsData, error: assessmentsError } = await supabase
+          .from("module_assessments")
+          .select("*")
+          .eq("module_id", moduleId)
+          .order("sort_order", { ascending: true });
         if (assessmentsError) {
           throw new Error("Could not load assessments.");
         }
@@ -182,7 +185,7 @@ export default function LearningModulePage() {
           .from("user_module_progress")
           .select("*")
           .eq("user_id", user.id)
-          .eq("module_id", moduleId) // moduleId is a UUID string
+          .eq("module_id", moduleId)
           .maybeSingle();
 
         if (progressError && progressError.code !== "PGRST116") {
@@ -291,6 +294,51 @@ export default function LearningModulePage() {
     }
   }
 
+  // 🔥 BACKEND INTEGRATION ACTION METHOD
+  const handleEmailSubmission = async (e: FormEvent, assessmentTitle: string) => {
+    e.preventDefault();
+
+    if (!projectLink.trim()) {
+      toast.error("Please enter your project work URL link first.");
+      return;
+    }
+
+    try {
+      setEmailSubmitting(true);
+
+      const response = await fetch("https://formspree.io/f/xaqzoolk", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({
+          _subject: `DGG LMS: New Project Submission for ${assessmentTitle}`,
+          adminRecipient: "contact@dglobalgrowthfield.com",
+          studentId: userId,
+          studentEmail: userEmail,
+          assessmentName: assessmentTitle,
+          submissionUrl: projectLink,
+          notes: studentNotes
+        })
+      });
+
+      if (response.ok) {
+        toast.success("Project submitted to admin email successfully!");
+        setProjectLink("");
+        setStudentNotes("");
+        await handleNextAssessment();
+      } else {
+        throw new Error("Mail engine fault link check pass failure");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Submission failed. Check your network connection parameters.");
+    } finally {
+      setEmailSubmitting(false);
+    }
+  };
+
   function openModalForLesson(lesson: Lesson) {
     setSelectedItem({ kind: "lesson", ...lesson });
     setShowModal(true);
@@ -306,12 +354,10 @@ export default function LearningModulePage() {
     setSelectedItem(null);
   }
 
-  // Modal: now handles YouTube + Drive specially
   function renderModal() {
     if (!showModal || !selectedItem) return null;
 
-    const rawVideoUrl =
-      selectedItem.kind === "lesson" ? selectedItem.video_url || "" : "";
+    const rawVideoUrl = selectedItem.kind === "lesson" ? selectedItem.video_url || "" : "";
     const rawPdfUrl = selectedItem.pdf_url || "";
 
     const youtubeEmbed = rawVideoUrl ? toYouTubeEmbed(rawVideoUrl) : null;
@@ -320,9 +366,7 @@ export default function LearningModulePage() {
     const hasRawVideoFile =
       !!rawVideoUrl &&
       !hasYoutube &&
-      (rawVideoUrl.endsWith(".mp4") ||
-        rawVideoUrl.endsWith(".webm") ||
-        rawVideoUrl.endsWith(".ogg"));
+      (rawVideoUrl.endsWith(".mp4") || rawVideoUrl.endsWith(".webm") || rawVideoUrl.endsWith(".ogg"));
 
     const pdfEmbed = rawPdfUrl ? toGoogleDrivePreview(rawPdfUrl) : null;
     const hasPdf = !!pdfEmbed;
@@ -343,7 +387,7 @@ export default function LearningModulePage() {
             <button
               type="button"
               onClick={closeModal}
-              className="ml-4 inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-gray-100 text-sm"
+              className="ml-4 inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-500 hover:bg-gray-100 text-sm font-light cursor-pointer border-0"
             >
               ✕
             </button>
@@ -351,7 +395,7 @@ export default function LearningModulePage() {
 
           {/* Description */}
           {selectedItem.full_description && (
-            <div className="px-4 pt-3 pb-2 border-b border-gray-100">
+            <div className="px-4 pt-3 pb-2 border-b border-gray-100 text-left">
               <p className="text-xs text-gray-600">
                 {selectedItem.full_description}
               </p>
@@ -360,13 +404,12 @@ export default function LearningModulePage() {
 
           {/* Content area */}
           <div className="flex-1 p-3 sm:p-4 overflow-auto space-y-3">
-            {/* YouTube or direct video */}
             {hasYoutube && (
               <div className="w-full rounded-xl overflow-hidden bg-black aspect-video">
                 <iframe
                   key={youtubeEmbed || "yt"}
                   src={youtubeEmbed || undefined}
-                  className="w-full h-full"
+                  className="w-full h-full border-0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
                   title="Lesson video"
@@ -376,24 +419,13 @@ export default function LearningModulePage() {
 
             {!hasYoutube && hasRawVideoFile && (
               <div className="w-full rounded-xl overflow-hidden bg-black aspect-video">
-                <video
-                  key={rawVideoUrl}
-                  src={rawVideoUrl}
-                  controls
-                  className="w-full h-full"
-                />
+                <video key={rawVideoUrl} src={rawVideoUrl} controls className="w-full h-full" />
               </div>
             )}
 
-            {/* PDF – Google Drive or normal PDF */}
             {hasPdf && (
               <div className="w-full h-[480px] rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
-                <iframe
-                  key={pdfEmbed || "pdf"}
-                  src={pdfEmbed || undefined}
-                  className="w-full h-full"
-                  title="Lesson PDF"
-                />
+                <iframe key={pdfEmbed || "pdf"} src={pdfEmbed || undefined} className="w-full h-full border-0" title="Lesson PDF" />
               </div>
             )}
 
@@ -412,7 +444,7 @@ export default function LearningModulePage() {
     return (
       <div className="flex min-h-screen bg-gray-50">
         <Sidebar role="student" />
-        <div className="flex-1 lg:ml-64 p-6 lg:p-10">
+        <div className="flex-1 lg:ml-64 p-6 lg:p-10 text-left">
           <p className="text-sm text-gray-500">Loading module...</p>
         </div>
       </div>
@@ -423,7 +455,7 @@ export default function LearningModulePage() {
     return (
       <div className="flex min-h-screen bg-gray-50">
         <Sidebar role="student" />
-        <div className="flex-1 lg:ml-64 p-6 lg:p-10">
+        <div className="flex-1 lg:ml-64 p-6 lg:p-10 text-left">
           <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
             {error}
           </div>
@@ -438,7 +470,7 @@ export default function LearningModulePage() {
 
       <div className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-10">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div>
+          <div className="text-left">
             <h1 className="text-xl sm:text-2xl font-bold text-[#512d7c]">
               {moduleInfo ? moduleInfo.title : "Module"}
             </h1>
@@ -449,7 +481,7 @@ export default function LearningModulePage() {
           <button
             type="button"
             onClick={() => router.push(`/dashboard/learning/${courseId}`)}
-            className="px-4 py-2 text-xs sm:text-sm rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+            className="px-4 py-2 text-xs sm:text-sm rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 cursor-pointer border-0"
           >
             Back to course
           </button>
@@ -463,10 +495,8 @@ export default function LearningModulePage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("lesson")}
-                className={`px-4 py-2 text-sm font-medium border-b-2 ${
-                  activeTab === "lesson"
-                    ? "border-[#512d7c] text-[#512d7c]"
-                    : "border-transparent text-gray-500"
+                className={`px-4 py-2 text-sm font-medium border-b-2 bg-transparent cursor-pointer border-0 ${
+                  activeTab === "lesson" ? "border-[#512d7c] text-[#512d7c]" : "border-transparent text-gray-500"
                 }`}
               >
                 Lesson
@@ -474,10 +504,8 @@ export default function LearningModulePage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("assessment")}
-                className={`px-4 py-2 text-sm font-medium border-b-2 ${
-                  activeTab === "assessment"
-                    ? "border-[#512d7c] text-[#512d7c]"
-                    : "border-transparent text-gray-500"
+                className={`px-4 py-2 text-sm font-medium border-b-2 bg-transparent cursor-pointer border-0 ${
+                  activeTab === "assessment" ? "border-[#512d7c] text-[#512d7c]" : "border-transparent text-gray-500"
                 }`}
               >
                 Assessment
@@ -487,70 +515,105 @@ export default function LearningModulePage() {
             {/* Current item section */}
             {activeTab === "lesson" ? (
               currentLesson ? (
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-left">
                   <div className="min-w-0">
                     <h2 className="text-sm sm:text-base font-semibold text-gray-800">
-                      Lesson {progress ? progress.current_lesson_index + 1 : 1}{" "}
-                      of {lessons.length}: {currentLesson.title}
+                      Lesson {progress ? progress.current_lesson_index + 1 : 1} of {lessons.length}: {currentLesson.title}
                     </h2>
                     {currentLesson.full_description && (
-                      <p className="mt-1 text-xs text-gray-600">
-                        {currentLesson.full_description}
-                      </p>
+                      <p className="mt-1 text-xs text-gray-600">{currentLesson.full_description}</p>
                     )}
                   </div>
                   <button
                     type="button"
                     onClick={() => openModalForLesson(currentLesson)}
-                    className="shrink-0 px-3 py-2 text-xs sm:text-sm rounded-lg bg-[#512d7c] text-white hover:bg-[#3f2160] w-full sm:w-auto text-center"
+                    className="shrink-0 px-3 py-2 text-xs sm:text-sm rounded-lg bg-[#512d7c] text-white hover:bg-[#3f2160] w-full sm:w-auto text-center border-0 cursor-pointer"
                   >
                     Open lesson
                   </button>
                 </div>
               ) : (
-                <p className="text-xs text-gray-400">No lessons in this module.</p>
+                <p className="text-xs text-gray-400 text-left">No lessons in this module.</p>
               )
             ) : currentAssessment ? (
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <h2 className="text-sm sm:text-base font-semibold text-gray-800">
-                    Assessment{" "}
-                    {progress ? progress.current_assessment_index + 1 : 1} of{" "}
-                    {assessments.length}: {currentAssessment.title}
-                  </h2>
-                  <p className="mt-0.5 text-[11px] uppercase tracking-wide text-purple-600">
-                    {currentAssessment.assessment_type}
-                  </p>
-                  {currentAssessment.full_description && (
-                    <p className="mt-1 text-xs text-gray-600">
-                      {currentAssessment.full_description}
+              
+              /* 🔥 ASSESSMENT PANEL FORM LOGIC EMBEDDED CONCURRENTLY */
+              <div className="flex flex-col gap-4 text-left">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                  <div className="min-w-0">
+                    <h2 className="text-sm sm:text-base font-semibold text-gray-800">
+                      Assessment {progress ? progress.current_assessment_index + 1 : 1} of {assessments.length}: {currentAssessment.title}
+                    </h2>
+                    <p className="mt-0.5 text-[11px] uppercase tracking-wide text-purple-600 font-bold">
+                      {currentAssessment.assessment_type}
                     </p>
-                  )}
+                    {currentAssessment.full_description && (
+                      <p className="mt-1 text-xs text-gray-600">{currentAssessment.full_description}</p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openModalForAssessment(currentAssessment)}
+                    className="shrink-0 px-3 py-2 text-xs sm:text-sm rounded-lg bg-[#512d7c] text-white hover:bg-[#3f2160] w-full sm:w-auto text-center border-0 cursor-pointer"
+                  >
+                    Open assessment
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => openModalForAssessment(currentAssessment)}
-                  className="shrink-0 px-3 py-2 text-xs sm:text-sm rounded-lg bg-[#512d7c] text-white hover:bg-[#3f2160] w-full sm:w-auto text-center"
-                >
-                  Open assessment
-                </button>
+
+                {/* Submissions Container form fields targeting contact email inbox updates */}
+                <form onSubmit={(e) => handleEmailSubmission(e, currentAssessment.title || "Task")} className="space-y-3 mt-1">
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-600 mb-1">
+                      Project Link Workspace Link <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="url"
+                      required
+                      value={projectLink}
+                      onChange={(e) => setProjectLink(e.target.value)}
+                      placeholder="https://github.com/... or https://drive.google.com/..."
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 text-xs rounded-lg focus:outline-none focus:bg-white focus:border-[#512d7c] transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-600 mb-1">
+                      Notes and Descriptions
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={studentNotes}
+                      onChange={(e) => setStudentNotes(e.target.value)}
+                      placeholder="Provide text brief context instructions for review board here..."
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 text-xs rounded-lg focus:outline-none focus:bg-white focus:border-[#512d7c] transition-all resize-none"
+                    />
+                  </div>
+
+                  <div className="flex justify-end pt-1">
+                    <button
+                      type="submit"
+                      disabled={emailSubmitting}
+                      className="px-4 py-2 bg-[#512d7c] hover:bg-[#3d215d] text-white font-semibold text-xs uppercase tracking-wider rounded-lg transition-all disabled:opacity-50 border-0 cursor-pointer"
+                    >
+                      {emailSubmitting ? "Submitting Task..." : "Submit Assessment Note"}
+                    </button>
+                  </div>
+                </form>
               </div>
             ) : (
-              <p className="text-xs text-gray-400">No assessments in this module.</p>
+              <p className="text-xs text-gray-400 text-left">No assessments in this module.</p>
             )}
 
             {/* Next buttons */}
-            <div className="flex justify-end pt-4">
+            <div className="flex justify-end pt-4 border-t border-gray-100">
               {activeTab === "lesson" && lessons.length > 0 && (
                 <button
                   type="button"
                   onClick={handleNextLesson}
                   disabled={saving}
-                  className="inline-flex items-center px-4 py-2 text-sm rounded-lg bg-[#512d7c] text-white hover:bg-[#3f2160] disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="inline-flex items-center px-4 py-2 text-sm rounded-lg bg-[#512d7c] text-white hover:bg-[#3f2160] disabled:opacity-60 disabled:cursor-not-allowed border-0 cursor-pointer"
                 >
-                  {progress && progress.current_lesson_index + 1 >= lessons.length
-                    ? "Mark lessons done"
-                    : "Next lesson"}
+                  {progress && progress.current_lesson_index + 1 >= lessons.length ? "Mark lessons done" : "Next lesson"}
                 </button>
               )}
 
@@ -559,32 +622,23 @@ export default function LearningModulePage() {
                   type="button"
                   onClick={handleNextAssessment}
                   disabled={saving}
-                  className="inline-flex items-center px-4 py-2 text-sm rounded-lg bg-[#512d7c] text-white hover:bg-[#3f2160] disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="inline-flex items-center px-4 py-2 text-sm rounded-lg bg-[#512d7c] text-white hover:bg-[#3f2160] disabled:opacity-60 disabled:cursor-not-allowed border-0 cursor-pointer"
                 >
-                  {progress &&
-                  progress.current_assessment_index + 1 >= assessments.length
-                    ? "Finish module"
-                    : "Next assessment"}
+                  {progress && progress.current_assessment_index + 1 >= assessments.length ? "Finish module" : "Next assessment"}
                 </button>
               )}
             </div>
           </div>
 
           {/* RIGHT COLUMN */}
-          <div className="space-y-4">
+          <div className="space-y-4 text-left">
             {/* Lessons list */}
             <div className="bg-white rounded-2xl shadow p-4">
-              <h2 className="text-sm font-semibold text-gray-800 mb-2">
-                Lessons in this module
-              </h2>
-              {lessons.length === 0 && (
-                <p className="text-xs text-gray-400">No lessons yet.</p>
-              )}
+              <h2 className="text-sm font-semibold text-gray-800 mb-2">Lessons in this module</h2>
+              {lessons.length === 0 && <p className="text-xs text-gray-400">No lessons yet.</p>}
               <div className="space-y-2">
                 {lessons.map((lesson, index) => {
-                  const isCurrent =
-                    activeTab === "lesson" &&
-                    progress?.current_lesson_index === index;
+                  const isCurrent = activeTab === "lesson" && progress?.current_lesson_index === index;
                   return (
                     <button
                       key={lesson.id}
@@ -592,23 +646,16 @@ export default function LearningModulePage() {
                       onClick={() => {
                         setActiveTab("lesson");
                         openModalForLesson(lesson);
-                        if (
-                          progress &&
-                          progress.current_lesson_index !== index
-                        ) {
+                        if (progress && progress.current_lesson_index !== index) {
                           updateProgress({ current_lesson_index: index });
                         }
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-lg border text-xs ${
-                        isCurrent
-                          ? "border-[#512d7c] bg-purple-50 text-[#512d7c]"
-                          : "border-gray-200 bg-gray-50 text-gray-700"
+                      className={`w-full text-left px-3 py-2 rounded-lg border text-xs cursor-pointer ${
+                        isCurrent ? "border-[#512d7c] bg-purple-50 text-[#512d7c]" : "border-gray-200 bg-gray-50 text-gray-700"
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-medium">
-                          {index + 1}. {lesson.title}
-                        </span>
+                        <span className="font-medium">{index + 1}. {lesson.title}</span>
                       </div>
                     </button>
                   );
@@ -618,17 +665,11 @@ export default function LearningModulePage() {
 
             {/* Assessments list */}
             <div className="bg-white rounded-2xl shadow p-4">
-              <h2 className="text-sm font-semibold text-gray-800 mb-2">
-                Assessments
-              </h2>
-              {assessments.length === 0 && (
-                <p className="text-xs text-gray-400">No assessments yet.</p>
-              )}
+              <h2 className="text-sm font-semibold text-gray-800 mb-2">Assessments</h2>
+              {assessments.length === 0 && <p className="text-xs text-gray-400">No assessments yet.</p>}
               <div className="space-y-2">
                 {assessments.map((assessment, index) => {
-                  const isCurrent =
-                    activeTab === "assessment" &&
-                    progress?.current_assessment_index === index;
+                  const isCurrent = activeTab === "assessment" && progress?.current_assessment_index === index;
                   return (
                     <button
                       key={assessment.id}
@@ -636,23 +677,16 @@ export default function LearningModulePage() {
                       onClick={() => {
                         setActiveTab("assessment");
                         openModalForAssessment(assessment);
-                        if (
-                          progress &&
-                          progress.current_assessment_index !== index
-                        ) {
+                        if (progress && progress.current_assessment_index !== index) {
                           updateProgress({ current_assessment_index: index });
                         }
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-lg border text-xs ${
-                        isCurrent
-                          ? "border-[#512d7c] bg-purple-50 text-[#512d7c]"
-                          : "border-gray-200 bg-gray-50 text-gray-700"
+                      className={`w-full text-left px-3 py-2 rounded-lg border text-xs cursor-pointer ${
+                        isCurrent ? "border-[#512d7c] bg-purple-50 text-[#512d7c]" : "border-gray-200 bg-gray-50 text-gray-700"
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-medium">
-                          {index + 1}. {assessment.title}
-                        </span>
+                        <span className="font-medium">{index + 1}. {assessment.title}</span>
                         <span className="text-[10px] uppercase tracking-wide text-gray-500">
                           {assessment.assessment_type || "assessment"}
                         </span>
@@ -665,22 +699,8 @@ export default function LearningModulePage() {
 
             {/* Status */}
             <div className="bg-white rounded-2xl shadow p-4 text-xs text-gray-600">
-              <p>
-                Lessons:{" "}
-                {lessons.length === 0
-                  ? "none"
-                  : `${(progress?.current_lesson_index ?? 0) + 1} of ${
-                      lessons.length
-                    }`}
-              </p>
-              <p>
-                Assessments:{" "}
-                {assessments.length === 0
-                  ? "none"
-                  : `${(progress?.current_assessment_index ?? 0) + 1} of ${
-                      assessments.length
-                    }`}
-              </p>
+              <p>Lessons: {lessons.length === 0 ? "none" : `${(progress?.current_lesson_index ?? 0) + 1} of ${lessons.length}`}</p>
+              <p>Assessments: {assessments.length === 0 ? "none" : `${(progress?.current_assessment_index ?? 0) + 1} of ${assessments.length}`}</p>
             </div>
           </div>
         </div>
