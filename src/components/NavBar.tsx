@@ -2,26 +2,42 @@
 
 import { useState, useEffect, useRef, FormEvent } from "react";
 
+// Standard courses are text-only now; the last item is the active conversion link
 const mainCoursesList = [
-  { name: "Full-Stack Software Engineering", path: "/signup?track=software" },
-  { name: "Advanced Data Analytics (SQL, Power BI)", path: "/signup?track=data" },
-  { name: "UI/UX Product Design Systems", path: "/signup?track=design" },
-  { name: "Digital Marketing & Brand Growth", path: "/signup?track=marketing" }
+  { name: "Digital Marketing" },
+  { name: "Admin Virtual Assistant" },
+  { name: "Project Manager" },
+  { name: "Data Analytics" },
+  { name: "SEO and Algorithm" },
+  { name: "Full Stack Development" },
+  { name: "AI Prompting Engineer" },
+  { name: "UI/UX Design" },
+  { name: "Sign up Now to Explore more", path: "/signup" } 
 ];
 
+// Foundational prep courses are text-only now; the last item is the active conversion link
 const prepCoursesList = [
-  { name: "01. Computer & Internet Basics", path: "/signup?prep=01" },
-  { name: "02. Getting Ready for Online Learning", path: "/signup?prep=02" },
-  { name: "03. Introduction to Modern Techie Journey", path: "/signup?prep=03" },
-  { name: "04. Introduction to No-Code Tools", path: "/signup?prep=04" },
-  { name: "05. Cybersecurity Fundamentals", path: "/signup?prep=05" },
-  { name: "06. Introduction to AI & Prompting", path: "/signup?prep=06" },
-  { name: "07. Business Legal Registration (CAC)", path: "/signup?prep=07" },
-  { name: "08. Digital Monetization & Upwork", path: "/signup?prep=08" }
+  { name: "01. Computer & Internet Basics" },
+  { name: "02. Getting Ready for Online Learning" },
+  { name: "03. Introduction to Modern Techie Journey" },
+  { name: "04. Introduction to No-Code Tools" },
+  { name: "05. Cybersecurity Fundamentals" },
+  { name: "06. Introduction to AI & Prompting" },
+  { name: "07. Business Legal Registration (CAC)" },
+  { name: "08. Digital Monetization & Upwork" },
+  { name: "Start your Prep Journey", path: "/signup" }
+];
+
+const resourcesList = [
+  { name: "LMS Guide", path: "/resources/lms-guide" },
+  { name: "Seminar/Webinar", path: "#" },
+  { name: "Radio Program", path: "#" },
+  { name: "FAQs", path: "#" },
+  { name: "Certificate Verification", path: "#" }
 ];
 
 export default function NavBar() {
-  const [activeMenu, setActiveMenu] = useState<"main" | "prep" | null>(null);
+  const [activeMenu, setActiveMenu] = useState<"main" | "prep" | "resources" | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -61,10 +77,10 @@ export default function NavBar() {
             </a>
           </div>
 
-          {/* 2. MIDDLE SEGMENT: CENTRAL HUB CONSOLE (Main, Prep + Search Icon) */}
+          {/* 2. MIDDLE SEGMENT: CENTRAL HUB CONSOLE */}
           <div className="flex items-center justify-center gap-2 xs:gap-3 sm:gap-5 flex-1 px-1">
             
-            {/* Explore Main Dropdown */}
+            {/* Courses Dropdown */}
             <div className="relative">
               <button
                 type="button"
@@ -73,28 +89,39 @@ export default function NavBar() {
                   activeMenu === "main" ? "text-[#512d7c]" : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                Explore Main
+                Courses
                 <svg className={`w-2.5 h-2.5 transform transition-transform ${activeMenu === "main" ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
 
               {activeMenu === "main" && (
-                <div className="absolute left-1/2 -translate-x-1/2 mt-3 w-60 sm:w-72 bg-white border border-slate-200 shadow-xl rounded-2xl p-2 animate-fade-in z-50">
-                  {mainCoursesList.map((course, idx) => (
-                    <a
-                      key={idx}
-                      href={course.path}
-                      className="block text-xs font-bold text-slate-700 hover:text-[#512d7c] hover:bg-purple-50/50 px-4 py-3 rounded-xl transition-all text-left decoration-none"
-                    >
-                      {course.name}
-                    </a>
-                  ))}
+                <div className="absolute left-1/2 -translate-x-1/2 mt-3 w-64 sm:w-72 bg-white border border-slate-200 shadow-xl rounded-2xl p-2 max-h-[320px] sm:max-h-[440px] overflow-y-auto custom-scrollbar animate-fade-in z-50">
+                  <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase block px-4 pt-2 pb-1">Available Specializations</span>
+                  {mainCoursesList.map((course, idx) => {
+                    const isLastItem = idx === mainCoursesList.length - 1;
+                    return isLastItem ? (
+                      <a
+                        key={idx}
+                        href={course.path}
+                        className="block text-xs font-black px-4 py-2.5 bg-amber-500 text-black hover:bg-amber-600 mt-2 text-center shadow-xs border border-amber-600/20 rounded-xl transition-all decoration-none"
+                      >
+                        {course.name}
+                      </a>
+                    ) : (
+                      <div
+                        key={idx}
+                        className="block text-xs font-bold text-slate-700 hover:bg-purple-50/30 px-4 py-2.5 rounded-xl transition-all text-left select-none"
+                      >
+                        {course.name}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
 
-            {/* Explore Prep Dropdown */}
+            {/* Prep Dropdown */}
             <div className="relative">
               <button
                 type="button"
@@ -103,22 +130,63 @@ export default function NavBar() {
                   activeMenu === "prep" ? "text-[#512d7c]" : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                Explore Prep
+                Prep
                 <svg className={`w-2.5 h-2.5 transform transition-transform ${activeMenu === "prep" ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
 
               {activeMenu === "prep" && (
-                <div className="absolute left-1/2 -translate-x-1/2 mt-3 w-64 sm:w-80 bg-white border border-slate-200 shadow-xl rounded-2xl p-2 max-h-[260px] sm:max-h-[380px] overflow-y-auto custom-scrollbar animate-fade-in z-50">
+                <div className="absolute left-1/2 -translate-x-1/2 mt-3 w-64 sm:w-80 bg-white border border-slate-200 shadow-xl rounded-2xl p-2 max-h-[300px] sm:max-h-[420px] overflow-y-auto custom-scrollbar animate-fade-in z-50">
                   <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase block px-4 pt-2 pb-1">Foundational Sequence</span>
-                  {prepCoursesList.map((course, idx) => (
+                  {prepCoursesList.map((course, idx) => {
+                    const isLastItem = idx === prepCoursesList.length - 1;
+                    return isLastItem ? (
+                      <a
+                        key={idx}
+                        href={course.path}
+                        className="block text-xs font-black px-4 py-2.5 bg-amber-500 text-black hover:bg-amber-600 mt-2 text-center shadow-xs border border-amber-600/20 rounded-xl transition-all decoration-none"
+                      >
+                        {course.name}
+                      </a>
+                    ) : (
+                      <div
+                        key={idx}
+                        className="block text-xs font-bold text-slate-700 hover:bg-amber-50/10 px-4 py-2.5 rounded-xl transition-all text-left select-none"
+                      >
+                        {course.name}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Resources Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setActiveMenu(activeMenu === "resources" ? null : "resources")}
+                className={`inline-flex items-center gap-0.5 xs:gap-1 text-[11px] xs:text-xs sm:text-sm font-black border-0 bg-transparent cursor-pointer transition-colors ${
+                  activeMenu === "resources" ? "text-[#512d7c]" : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Resources
+                <svg className={`w-2.5 h-2.5 transform transition-transform ${activeMenu === "resources" ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {activeMenu === "resources" && (
+                <div className="absolute left-1/2 -translate-x-1/2 mt-3 w-56 bg-white border border-slate-200 shadow-xl rounded-2xl p-2 animate-fade-in z-50">
+                  <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase block px-4 pt-2 pb-1">Knowledge Base</span>
+                  {resourcesList.map((resource, idx) => (
                     <a
                       key={idx}
-                      href={course.path}
-                      className="block text-xs font-bold text-slate-700 hover:text-amber-600 hover:bg-amber-50/30 px-4 py-2.5 rounded-xl transition-all text-left decoration-none"
+                      href={resource.path}
+                      className="block text-xs font-bold text-slate-700 hover:text-[#512d7c] hover:bg-purple-50/50 px-4 py-2.5 rounded-xl transition-all text-left decoration-none"
                     >
-                      {course.name}
+                      {resource.name}
                     </a>
                   ))}
                 </div>
@@ -144,7 +212,7 @@ export default function NavBar() {
               </button>
             </form>
 
-            {/* UNIVERSAL SEARCH ICON TOGGLE BUTTON (Visible on all smaller displays) */}
+            {/* UNIVERSAL SEARCH ICON TOGGLE BUTTON */}
             <button
               type="button"
               onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
@@ -158,7 +226,7 @@ export default function NavBar() {
 
           </div>
 
-          {/* 3. RIGHT SEGMENT: STACKED BUTTON MODULE (Responsive & Shrunk) */}
+          {/* 3. RIGHT SEGMENT: STACKED BUTTON MODULE */}
           <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-2 items-center flex-shrink-0">
             <a
               href="/login"

@@ -16,7 +16,13 @@ export default function SignupForm({ initialRole = "student" }: SignupFormProps)
   const [fullName, setFullName] = useState("");
   const [roleChoice, setRoleChoice] = useState<RoleChoice>(initialRole);
 
-  // extra fields only for tutor
+  // New conversion-optimized student profile fields
+  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [institutionName, setInstitutionName] = useState("");
+  const [discipline, setDiscipline] = useState("");
+  const [educationLevel, setEducationLevel] = useState("");
+
+  // Extra fields only for tutor
   const [experience, setExperience] = useState("");
   const [qualifications, setQualifications] = useState("");
   const [motivation, setMotivation] = useState("");
@@ -24,7 +30,7 @@ export default function SignupForm({ initialRole = "student" }: SignupFormProps)
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // keep form role in sync with page toggle
+  // Keep form role in sync with page toggle
   useEffect(() => {
     setRoleChoice(initialRole);
   }, [initialRole]);
@@ -34,7 +40,7 @@ export default function SignupForm({ initialRole = "student" }: SignupFormProps)
     setLoading(true);
     const supabase = createBrowser();
 
-    // 1) create auth user
+    // 1) Create auth user with comprehensive user metadata targets
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -42,6 +48,13 @@ export default function SignupForm({ initialRole = "student" }: SignupFormProps)
         data: {
           full_name: fullName,
           role: roleChoice === "student" ? "student" : "pending_tutor",
+          // Pass student metadata explicitly to the user context
+          ...(roleChoice === "student" && {
+            whatsapp_number: whatsappNumber,
+            institution_name: institutionName,
+            discipline: discipline,
+            education_level: educationLevel,
+          }),
         },
         emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`,
       },
@@ -55,7 +68,7 @@ export default function SignupForm({ initialRole = "student" }: SignupFormProps)
 
     const userId = authData.user.id;
 
-    // 2) if they chose tutor, create tutor_application + set profile.role = 'pending_tutor'
+    // 2) If they chose tutor, create tutor_application + set profile.role = 'pending_tutor'
     if (roleChoice === "tutor") {
       const { error: appError } = await supabase
         .from("tutor_applications")
@@ -64,7 +77,7 @@ export default function SignupForm({ initialRole = "student" }: SignupFormProps)
           experience,
           qualifications,
           motivation,
-          status: "pending", // ensure this column exists
+          status: "pending", 
         });
 
       if (appError) {
@@ -86,6 +99,22 @@ export default function SignupForm({ initialRole = "student" }: SignupFormProps)
 
       toast.success("Tutor application submitted! Check your email to confirm.");
     } else {
+      // Optional: If your backend has a public.profiles triggers that automatically 
+      // synchronizes auth metadata onto the table, update the specific student table extensions here:
+      const { error: studentProfileError } = await supabase
+        .from("profiles")
+        .update({
+          whatsapp_number: whatsappNumber,
+          institution_name: institutionName,
+          discipline: discipline,
+          education_level: educationLevel,
+        })
+        .eq("id", userId);
+
+      if (studentProfileError) {
+        console.warn("Profile table sync failed, fallback to auth meta:", studentProfileError.message);
+      }
+
       toast.success("Check your email to confirm signup!");
     }
 
@@ -141,7 +170,89 @@ export default function SignupForm({ initialRole = "student" }: SignupFormProps)
         />
       </div>
 
-      {/* extra fields visible only when Tutor is selected */}
+      {/* Student Specific Fields Condition Matrix */}
+      {roleChoice === "student" && (
+        <div className="bg-purple-50/50 p-6 rounded-xl border border-purple-100 space-y-5 animate-fadeIn">
+          
+          {/* Trust-Building Dynamic Copy Text */}
+          <div className="text-sm text-gray-600 bg-white p-4 rounded-lg border border-purple-200 shadow-sm leading-relaxed">
+            💡 <span className="font-bold text-[#512d7c]">Why we ask:</span> DGG Academy custom-tailors your learning pathway. Your educational background helps our administration map your profile to high-demand corporate workflows and pair you with the perfect tech ecosystem mentors.
+          </div>
+
+          {/* WhatsApp Field */}
+          <div>
+            <label className="block text-base font-bold text-[#512d7c] mb-1.5">
+              WhatsApp Contact Number
+            </label>
+            <input
+              type="tel"
+              placeholder="e.g., +2348012345678"
+              value={whatsappNumber}
+              onChange={(e) => setWhatsappNumber(e.target.value)}
+              required
+              className="w-full px-5 py-3.5 border border-gray-300 rounded-lg text-black text-base bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#f2b42c]"
+            />
+          </div>
+
+          {/* Institution Field */}
+          <div>
+            <label className="block text-base font-bold text-[#512d7c] mb-1.5">
+              Institution / University Name
+            </label>
+            <input
+              type="text"
+              placeholder="e.g., University of Lagos"
+              value={institutionName}
+              onChange={(e) => setInstitutionName(e.target.value)}
+              required
+              className="w-full px-5 py-3.5 border border-gray-300 rounded-lg text-black text-base bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#f2b42c]"
+            />
+          </div>
+
+          {/* Discipline Field */}
+          <div>
+            <label className="block text-base font-bold text-[#512d7c] mb-1.5">
+              Discipline / Course of Study
+            </label>
+            <input
+              type="text"
+              placeholder="e.g., Computer Science / Economics"
+              value={discipline}
+              onChange={(e) => setDiscipline(e.target.value)}
+              required
+              className="w-full px-5 py-3.5 border border-gray-300 rounded-lg text-black text-base bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#f2b42c]"
+            />
+          </div>
+
+          {/* Level of Education Select Dropdown */}
+          <div>
+            <label className="block text-base font-bold text-[#512d7c] mb-1.5">
+              Current Level of Education
+            </label>
+            <div className="relative">
+              <select
+                value={educationLevel}
+                onChange={(e) => setEducationLevel(e.target.value)}
+                required
+                className="w-full px-5 py-3.5 border border-gray-300 rounded-lg text-black text-base bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-[#f2b42c]"
+              >
+                <option value="" disabled hidden>Select your current educational milestone</option>
+                <option value="undergraduate">Undergraduate (Still in School)</option>
+                <option value="postgraduate">Postgraduate Student</option>
+                <option value="high_school">High School Graduate</option>
+                <option value="university_graduate">University Graduate (B.Sc / HND / OND)</option>
+                <option value="professional">Working Professional / Self-Taught</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                ▼
+              </div>
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      {/* Extra fields visible only when Tutor is selected */}
       {roleChoice === "tutor" && (
         <>
           <div>

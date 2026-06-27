@@ -133,25 +133,22 @@ export default function PrepIntroPage() {
           {/* Video Overview Grid System Layout */}
           <section className="grid lg:grid-cols-[1.6fr,1.4fr] gap-6 mb-10 items-start">
             
-            {/* Interactive Video Container */}
+            {/* Interactive Custom HTML5 Video Player Frame Container */}
             <div className="bg-slate-50 rounded-3xl border border-slate-200/70 p-6 text-left h-full flex flex-col justify-between">
               <div>
                 <h2 className="text-sm font-black text-slate-800 uppercase tracking-wide flex items-center gap-2 mb-4">
                   <span>📹</span> Intro Blueprint Video: How Prep Executes
                 </h2>
-                <div className="aspect-video w-full rounded-2xl bg-slate-900 border border-slate-800 shadow-inner overflow-hidden flex flex-col items-center justify-center text-center p-4 group relative">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/10 z-0" />
-                  <div className="h-14 w-14 rounded-full bg-white/10 group-hover:bg-white/20 backdrop-blur-md flex items-center justify-center text-white transition-all cursor-pointer border border-white/20 shadow-md z-10 scale-95 group-hover:scale-100">
-                    <svg className="w-5 h-5 fill-white ml-0.5" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </div>
-                  <span className="text-7xl font-black text-white/5 tracking-tighter absolute select-none pointer-events-none uppercase">
-                    DGG
-                  </span>
-                  <span className="text-[11px] font-black uppercase tracking-widest text-slate-400 mt-4 font-mono z-10 group-hover:text-white transition-colors">
-                    DGG Academy Intro Matrix Node
-                  </span>
+                
+                {/* Immersive HTML5 Video Component Block */}
+                <div className="aspect-video w-full rounded-2xl bg-black border border-slate-200 shadow-inner overflow-hidden relative group">
+                  <video 
+                    src="/videos/prep-intro.mp4"
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               </div>
               <p className="mt-4 text-xs font-medium text-slate-400 leading-relaxed italic border-t border-slate-200/60 pt-3">
