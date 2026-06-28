@@ -50,10 +50,14 @@ export default function CertificateVerificationPage() {
 
       if (!certError && certData) {
         setAccountStatus("certified");
+        
+        // Safely address profile object whether Supabase infers an array or a single entity
+        const profileNode = Array.isArray(certData.profiles) ? certData.profiles[0] : (certData.profiles as any);
+
         setResult({
           certId: certData.id,
-          fullName: certData.profiles.full_name,
-          email: certData.profiles.email,
+          fullName: profileNode?.full_name || "Unknown Graduate",
+          email: profileNode?.email || "",
           trackName: certData.track_name,
           startDate: certData.start_date,
           completion_date: certData.completion_date,
@@ -236,7 +240,7 @@ export default function CertificateVerificationPage() {
                 <div className="space-y-1.5">
                   <h3 className="font-black text-slate-900 text-base tracking-tight uppercase">Account Found — Certification Pending</h3>
                   <p className="text-xs sm:text-sm font-medium text-slate-600 leading-relaxed max-w-sm">
-                    This email is recognized as an active student inside our platform directory, but they have not completed a full track course required to authorize a graduation certificate yet. Please check back later.
+                    This email is recognized as an active student inside our platform directory, but no completed course yet for certification, check back later.
                   </p>
                 </div>
               </div>

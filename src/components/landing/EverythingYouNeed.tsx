@@ -84,13 +84,20 @@ export default function EverythingYouNeed() {
                 <span className="text-[10px] font-black uppercase tracking-wider text-purple-200 block mb-1">
                   Standard Enrollment Fee
                 </span>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl sm:text-4xl font-black text-[#f2b42c] tracking-tight">
-                    ₦75,000
-                  </span>
-                  <span className="text-xs font-bold text-white/70 uppercase">
-                    NGN One-Time
-                  </span>
+                <div className="space-y-0.5">
+                  {/* Slashed Original Value */}
+                  <div className="text-sm font-bold text-purple-300 line-through tracking-tight">
+                    ₦125,000
+                  </div>
+                  {/* Active Discount Value */}
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl sm:text-4xl font-black text-[#f2b42c] tracking-tight">
+                      ₦75,000
+                    </span>
+                    <span className="text-xs font-bold text-white/70 uppercase">
+                      NGN One-Time
+                    </span>
+                  </div>
                 </div>
               </div>
 
