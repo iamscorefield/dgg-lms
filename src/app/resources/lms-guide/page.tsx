@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Play, BookOpen, Clock, Layers, HelpCircle, ArrowUpRight } from "lucide-react";
+import { Play, BookOpen, Clock, Layers, HelpCircle, ArrowUpRight, ChevronDown, MessageSquare, Headphones, ShieldAlert } from "lucide-react";
 
 interface VideoGuide {
   id: string;
@@ -9,7 +9,12 @@ interface VideoGuide {
   duration: string;
   category: string;
   description: string;
-  youtubeId: string; // The specific YouTube video string code
+  youtubeId: string;
+}
+
+interface FAQItem {
+  question: string;
+  answer: string;
 }
 
 export default function LMSGuidePage() {
@@ -21,7 +26,7 @@ export default function LMSGuidePage() {
       duration: "12:45",
       category: "Ecosystem Basics",
       description: "A comprehensive structural tour through the DGG platform dashboard. Learn how to locate assignments, switch modules, and interact with the technical core.",
-      youtubeId: "dQw4w9WgXcQ" // Swap with your actual YouTube video IDs
+      youtubeId: "dQw4w9WgXcQ"
     },
     {
       id: "02",
@@ -89,8 +94,27 @@ export default function LMSGuidePage() {
     }
   ];
 
-  // Set the primary playing video state default to card index 0
+  const faqs: FAQItem[] = [
+    {
+      question: "Why is my next lesson showing a locked status icon?",
+      answer: "DGG Academy runs on a strict sequential gate-locking framework. You must attempt the practical assessment sandbox assignment for your current lesson and score 80% or higher to automatically trigger the database migration hook that unlocks the next video node."
+    },
+    {
+      question: "How long do I maintain access clearance to these video training modules?",
+      answer: "Once your baseline ₦75,000 onboarding membership token is authorized via Paystack, your account clears for lifetime unthrottled server access. There are zero recurring subscription rates, and all future 2026 curriculum expansions are included."
+    },
+    {
+      question: "What should I do if my Paystack payment successfully runs but my panel remains locked?",
+      answer: "This is usually caused by a delayed background web-hook sync. Do not pay twice. Simply perform a hard refresh on your web browser cache or sign out and sign back in to force a fresh Supabase session token fetch."
+    },
+    {
+      question: "Can I download these video modules to watch offline?",
+      answer: "To secure proprietary system logic, all curriculum training modules must be streamed live through our high-performance embedded media pipeline inside the authenticated web student panel dashboard."
+    }
+  ];
+
   const [currentVideo, setCurrentVideo] = useState<VideoGuide>(guides[0]);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
     <div className="min-h-screen bg-white text-slate-800 font-sans pt-24 pb-16">
@@ -109,13 +133,12 @@ export default function LMSGuidePage() {
           </p>
         </div>
 
-        {/* TOP CORES SYSTEM: THE MAIN STREAM THEATER THEATER PLAYER LAYER */}
+        {/* TOP CORES SYSTEM: THE MAIN STREAM THEATER PLAYER LAYER */}
         <section className="grid lg:grid-cols-12 gap-8 mb-16 items-start">
           
           {/* Active Theater View Panel Frame */}
           <div className="lg:col-span-8 bg-slate-50 border border-slate-200 p-4 sm:p-5 rounded-3xl shadow-sm">
             <div className="aspect-video w-full rounded-2xl bg-black border border-slate-800 shadow-inner overflow-hidden relative">
-              {/* Embedded Seamless YouTube Framework without breaking current workspace flow context */}
               <iframe
                 src={`https://www.youtube.com/embed/${currentVideo.youtubeId}?autoplay=0&rel=0&modestbranding=1`}
                 title={currentVideo.title}
@@ -137,20 +160,20 @@ export default function LMSGuidePage() {
             </div>
           </div>
 
-          {/* Sidebar Context Highlight Notice Box */}
+          {/* REWRITTEN SIDEBAR CONTEXT BOX */}
           <div className="lg:col-span-4 bg-gradient-to-br from-[#512d7c] to-[#2E164A] text-white p-6 sm:p-8 rounded-3xl shadow-md h-full flex flex-col justify-between relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full pointer-events-none" />
             <div>
               <h3 className="text-base font-black tracking-tight mb-4 flex items-center gap-2 text-[#f2b42c]">
-                <HelpCircle size={20} /> Stuck on execution?
+                <HelpCircle size={20} /> Ready to get started?
               </h3>
               <p className="text-xs text-purple-100 font-medium leading-relaxed mb-4">
-                These documentation guides match our 2026 academy system revisions exactly. If a component view doesn't match your interface array layout:
+                This guided reference structure is designed to fast-track your technical literacy setup. To ensure maximum optimization as you move forward:
               </p>
               <ul className="text-xs space-y-3 font-semibold text-purple-200 border-t border-white/10 pt-4">
-                <li className="flex items-start gap-2">🔹 Run <code className="bg-white/10 px-1.5 py-0.5 rounded text-white font-mono">npm update</code> inside directory matrix.</li>
-                <li className="flex items-start gap-2">🔹 Perform a deep hardware cache flush to sync layouts.</li>
-                <li className="flex items-start gap-2">🔹 Access live support channel via workspace node tab.</li>
+                <li className="flex items-start gap-2">🔹 Follow the modules sequentially without attempting to bypass core assignment gates.</li>
+                <li className="flex items-start gap-2">🔹 Test your system configurations alongside each step using a split-screen layout.</li>
+                <li className="flex items-start gap-2">🔹 Access your cohort dashboard to track real-time score analytics and feedback loop criteria.</li>
               </ul>
             </div>
             
@@ -164,10 +187,10 @@ export default function LMSGuidePage() {
         </section>
 
         {/* THE LOWER SECTION: CONTROLS GRID STREAMING MATRIX GRID (9 CARDS) */}
-        <section className="text-left">
+        <section className="text-left mb-20">
           <div className="mb-8 border-b border-slate-200 pb-4">
             <h3 className="text-lg font-black text-slate-900 uppercase tracking-wide flex items-center gap-2">
-              <Layers size={20} className="text-[#512d7c]" /> All Workspace Documentation Modules ({guides.length} Video Blueprints)
+              <Layers size={20} className="text-[#512d7c]" /> All LMS Documentation Modules ({guides.length} Video Blueprints)
             </h3>
             <p className="text-xs font-medium text-slate-400 mt-0.5">
               Click any specific operational milestone tile below to reload the primary high-definition streaming view frame canvas above.
@@ -192,7 +215,6 @@ export default function LMSGuidePage() {
                   }`}
                 >
                   <div>
-                    {/* Card Meta Indicator Bar */}
                     <div className="flex items-center justify-between mb-3.5">
                       <div className={`h-8 w-8 rounded-lg border flex items-center justify-center font-mono font-black text-xs transition-all ${
                         isActive ? "bg-[#512d7c] text-white border-[#512d7c]" : "bg-white text-[#512d7c] border-slate-200 group-hover:bg-[#512d7c] group-hover:text-white"
@@ -204,20 +226,17 @@ export default function LMSGuidePage() {
                       </span>
                     </div>
 
-                    {/* Title Text Target Layout */}
                     <h4 className={`font-black text-sm tracking-tight leading-snug mb-2 transition-colors ${
                       isActive ? "text-[#512d7c]" : "text-slate-800 group-hover:text-[#512d7c]"
                     }`}>
                       {video.title}
                     </h4>
                     
-                    {/* Desc Content */}
                     <p className="text-xs font-medium text-slate-400 leading-relaxed line-clamp-3">
                       {video.description}
                     </p>
                   </div>
 
-                  {/* Card Bottom Indicator Flex Action */}
                   <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between w-full">
                     <span className="text-[11px] font-bold text-slate-400 flex items-center gap-1">
                       <Clock size={12} /> {video.duration} Mins
@@ -231,6 +250,73 @@ export default function LMSGuidePage() {
                 </button>
               );
             })}
+          </div>
+        </section>
+
+        {/* SECTION A: QUICK-SEARCH DOCUMENTATION INDEX (ACCORDION) */}
+        <section className="text-left max-w-4xl mx-auto mb-20">
+          <div className="mb-8 text-center sm:text-left">
+            <h3 className="text-xl font-black text-slate-900 uppercase tracking-wide flex items-center justify-center sm:justify-start gap-2">
+              <BookOpen size={22} className="text-[#512d7c]" /> Frequently Raised Platform Questions
+            </h3>
+            <p className="text-xs font-medium text-slate-400 mt-0.5">
+              Quick answers to structural mechanics, database status verification, and token access configurations.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {faqs.map((faq, idx) => {
+              const isOpen = openFaq === idx;
+              return (
+                <div key={idx} className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/50 hover:bg-white transition-all">
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaq(isOpen ? null : idx)}
+                    className="w-full px-6 py-5 flex items-center justify-between gap-4 text-left font-bold text-sm sm:text-base text-slate-800 focus:outline-none cursor-pointer"
+                  >
+                    <span>{faq.question}</span>
+                    <ChevronDown size={18} className={`text-slate-400 transition-transform duration-300 flex-shrink-0 ${isOpen ? "rotate-180 text-[#512d7c]" : ""}`} />
+                  </button>
+                  {isOpen && (
+                    <div className="px-6 pb-5 text-xs sm:text-sm text-slate-500 leading-relaxed bg-white border-t border-slate-100 animate-fadeIn">
+                      {faq.answer}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* SECTION B: TECHNICAL SUPPORT ESCALATION DESK */}
+        <section className="text-left bg-slate-50 border border-slate-200 p-6 sm:p-10 rounded-3xl max-w-5xl mx-auto shadow-2xs">
+          <div className="grid md:grid-cols-12 gap-8 items-center">
+            <div className="md:col-span-7 space-y-4">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-50 border border-red-200 text-[10px] font-black text-red-700 uppercase tracking-widest rounded-md">
+                <ShieldAlert size={12} /> System Resolution Core
+              </span>
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                Unresolved Account Configuration Bug?
+              </h3>
+              <p className="text-xs sm:text-sm font-medium text-slate-500 leading-relaxed">
+                If an assessment score hasn't registered or you are running into LMS dashboard rendering errors after following the guides, escalate it instantly. Our operational administration monitor support tickets directly.
+              </p>
+            </div>
+            
+            <div className="md:col-span-5 flex flex-col sm:flex-row md:flex-col gap-4 w-full">
+              <a 
+                href="/contact"
+                className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 font-bold text-xs uppercase tracking-wider rounded-xl transition-all text-center shadow-3xs decoration-none"
+              >
+                <MessageSquare size={14} className="text-[#512d7c]" /> Open Forum Ticket
+              </a>
+              <a 
+                href="/contact"
+                className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-[#512d7c] hover:bg-[#3f2261] text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all text-center shadow-sm decoration-none"
+              >
+                <Headphones size={14} /> Contact Live Helpdesk
+              </a>
+            </div>
           </div>
         </section>
 

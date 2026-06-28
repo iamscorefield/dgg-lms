@@ -30,10 +30,10 @@ const prepCoursesList = [
 
 const resourcesList = [
   { name: "LMS Guide", path: "/resources/lms-guide" },
-  { name: "Seminar/Webinar", path: "#" },
-  { name: "Radio Program", path: "#" },
-  { name: "FAQs", path: "#" },
-  { name: "Certificate Verification", path: "#" }
+  { name: "Seminar/Webinar", path: "/resources/seminar-webinar" },
+  { name: "Radio Program", path: "/resources/radio-program" },
+  { name: "FAQs", path: "/resources/faq" },
+  { name: "Certificate Verification", path: "/resources/certificate-verification" }
 ];
 
 export default function NavBar() {
