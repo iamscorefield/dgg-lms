@@ -149,7 +149,9 @@ export default function StudentProfilePage() {
     try {
       // 1. Clean out any old hanging unverified factors first
       const { data: factors } = await supabase.auth.mfa.listFactors();
-      const unverifiedFactors = factors?.totp?.filter(f => f.status === "unverified") || [];
+      
+      // FIXED: Cast f.status to string to safely bypass type-strictness limitations
+      const unverifiedFactors = factors?.totp?.filter(f => (f.status as string) === "unverified") || [];
       for (const f of unverifiedFactors) {
         await supabase.auth.mfa.unenroll({ factorId: f.id });
       }
@@ -217,7 +219,9 @@ export default function StudentProfilePage() {
       const { data: { session } } = await supabase.auth.getSession();
       
       const { data: factors } = await supabase.auth.mfa.listFactors();
-      const activeFactor = factors.totp?.find(f => f.status === "verified" || f.status === "unverified");
+      
+      // FIXED: Cast f.status to string to check safely here too
+      const activeFactor = factors.totp?.find(f => (f.status as string) === "verified" || (f.status as string) === "unverified");
       
       if (activeFactor) {
         await supabase.auth.mfa.unenroll({ factorId: activeFactor.id });
@@ -270,6 +274,8 @@ export default function StudentProfilePage() {
               setIsEditing(!isEditing);
               setSuccess(null);
               setError(null);
+              setSecurityError(null);
+              setSecuritySuccess(null);
             }}
             className={`px-5 py-2 text-xs font-black uppercase tracking-wider rounded-xl border transition-all cursor-pointer ${
               isEditing
