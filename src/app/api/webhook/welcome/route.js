@@ -1,20 +1,21 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
-// Forces Next.js to skip pre-rendering this endpoint as a static page during build time
+
 export const dynamic = "force-dynamic";
-// Initialize the Resend pipeline using your secure environment token
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req) {
+  // Move the initialization inside the function so it doesn't run during build time
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
   try {
     // Parse the incoming webhook payload directly from Supabase
     const payload = await req.json();
     
     // Supabase webhook payload structure puts the new user data inside 'record'
     const { email } = payload.record || {};
-
+    
     if (!email) {
-      return NextResponse.json({ error: 'No target email found in database payload record' }, { status: 400 });
+      return NextResponse.json({ error: 'No target email found in database payload' }, { status: 400 });
     }
 
     // Fire the custom HTML onboarding matrix through the verified Resend pipe
