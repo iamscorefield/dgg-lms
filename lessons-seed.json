@@ -1,0 +1,102 @@
+[
+  {
+    "course_id": "digital-literacy-bootcamp",
+    "lesson_number": 1,
+    "slide_index": 1,
+    "slide_title": "Welcome to the Machine: The True Core Brain",
+    "slide_content": "A computer is not a magical device; it is a collection of physical tools processing electric current. The absolute central engine is the CPU (Central Processing Unit). Think of it as the ultimate site foreman or coordinator of your system. Every time you click a folder, play a lecture video, or type a character code, the CPU processes that calculation request. In Nigeria, when buying a computer at computer village or online, you will mostly see two massive processor brands: Intel (Core i3, i5, i7) and AMD (Ryzen series). Higher numbers mean your system processes background calculation arrays faster without locking up.",
+    "practical_exercise": "Look closely at your physical laptop case right now. Find the branded sticker near your keyboard trackpad that indicates whether your system runs an Intel or AMD processor core engine."
+  },
+  {
+    "course_id": "digital-literacy-bootcamp",
+    "lesson_number": 1,
+    "slide_index": 2,
+    "slide_title": "The Storage Speed Trap: HDD vs. SSD Platforms",
+    "slide_content": "Why does an old laptop take up to 5 minutes just to boot up to the desktop screen? The culprit is a mechanical Hard Disk Drive (HDD). HDDs store data payload items on physical spinning magnetic platters using a reader head. If your machine shakes or your battery drops out, it can corrupt instantly. Modern workspaces demand Solid State Drives (SSDs). SSDs have zero moving parts and utilize microchip structures to hold information. Switching your operating system drive root from a legacy mechanical HDD array to a modern SSD format speeds up file reads by over 500% instantly.",
+    "practical_exercise": "When purchasing any laptop device for remote work tracking pipelines, prioritize a 256GB or 512GB SSD over a massive 1TB HDD. Speed matters far more than empty slow storage compartments."
+  },
+  {
+    "course_id": "digital-literacy-bootcamp",
+    "lesson_number": 1,
+    "slide_index": 3,
+    "slide_title": "RAM Capacity vs. Storage Space Realities",
+    "slide_content": "This is where almost every single beginner gets tripped up! Storage space (SSD/HDD) is your long-term warehouse—files sit there safely even when the machine is shut off entirely. RAM (Random Access Memory) is your temporary workspace table desk. When you open a browser tab, a PDF workbook, or a code file, the CPU grabs that data from the slow storage disk and holds it inside the ultra-fast RAM workspace table for immediate viewing. When NEPA takes power suddenly without a backup UPS attached, anything sitting in your RAM memory table that hasn't been saved to your storage disk disappears instantly.",
+    "practical_exercise": "To open multiple browser tabs smoothly while streaming live academy cohort sessions, ensure your laptop device runs at least 8GB of RAM memory. 4GB will constantly freeze under load."
+  },
+  {
+    "course_id": "digital-literacy-bootcamp",
+    "lesson_number": 1,
+    "slide_index": 4,
+    "slide_title": "Bypassing Data Burn: Peripheral Ports Mastery",
+    "slide_content": "Your machine communicates with external assets via edge port connections. The most vital interfaces include: 1) USB Ports (Type-A and Type-C) to connect external flash drives, webcams, and mobile hotspot modems. 2) HDMI Ports to route your high-definition screen signals straight into external presentation monitors or workspace televisions. 3) Ethernet Sockets (RJ-45) for plugged-in cable internet infrastructure routes. Using a wired Ethernet line directly into your router bypasses local wireless radio interference drops and optimizes packet delivery stability during heavy data pipelines.",
+    "practical_exercise": "Locate the HDMI port on the left or right side of your computer chassis. This is the exact terminal socket you will plug into when projecting work assignments to your presentation boards."
+  },
+  {
+    "course_id": "digital-literacy-bootcamp",
+    "lesson_number": 1,
+    "slide_index": 5,
+    "slide_title": "Lesson 1 Checkpoint: Core Architectural Review",
+    "slide_content": "Congratulations! You have completed the text-based reading structures for the hardware block specifications of computer systems engineering. You now know how processor cycles interact with temporary RAM structures, why solid-state drives eliminate boot lags, and how interface edge ports map signals. Before advancing to the testing evaluation node, review the multimedia masterclass breakdown on the next slide to cement your processing framework.",
+    "practical_exercise": "Click the right arrow button on your slide controller right now to advance to the Masterclass Video Screening Room."
+  },
+  {
+    "course_id": "digital-literacy-bootcamp",
+    "lesson_number": 1,
+    "slide_index": 6,
+    "slide_title": "Masterclass Cinema: Hardware Engineering Deep-Dive",
+    "slide_content": "WATCH VIDEO TO LEARN MORE INTERACTIVELY: This visual workshop extension provides a practical walk-through of the hardware principles covered in this unit. Use this multi-media asset to anchor your transcript text definitions before unlocking your active grading module assessment.",
+    "youtube_video_code": "dQw4w9WgXcQ",
+    "is_video_slide": true,
+    "practical_exercise": "Watch this 10-minute conceptual video clip directly within the interface framework. Once completed, tap the purple verification button below to trigger your interactive 10-card Slider Assessment Verification Node!"
+  },
+  {
+    "course_id": "digital-literacy-bootcamp",
+    "lesson_number": 2,
+    "slide_index": 1,
+    "slide_title": "The Ghost in the Machine: Operating Systems",
+    "slide_content": "Hardware components by themselves are just silent pieces of metal and plastic. The Operating System (OS) is the master software suite that brings the machine to life. It manages your computer memory, orchestrates file creation pathways, handles peripheral driver codes, and provides the visual Graphical User Interface (GUI) you click on. The world standard for business administration workflows is Microsoft Windows (Windows 10 and 11). On your mobile smartphones, you are likely navigating Google Android or Apple iOS structures. Every configuration you execute runs through the OS kernel system.",
+    "practical_exercise": "Hold down the Windows Logo Key on your keyboard and tap the 'I' key. This instantly forces your operating system settings panel to launch on your display screen canvas."
+  },
+  {
+    "course_id": "digital-literacy-bootcamp",
+    "lesson_number": 2,
+    "slide_index": 2,
+    "slide_title": "Mastering the Desktop and System Tray Systems",
+    "slide_content": "Your main workspace layout view upon boot is the Desktop screen area. At the bottom layout boundary sits the Taskbar tracking line. The far right corner of your taskbar holds the System Tray console. This tray is incredibly vital because it monitors background services running live on your machine. It houses your Wi-Fi signal connectivity meters, battery capacity management chips, and audio mixer states. If your internet connectivity suddenly drops out on your desk, your first troubleshooting step is always checking the status indicators inside this system tray workspace box.",
+    "practical_exercise": "Click the small upward-pointing arrow emblem inside the bottom right corner of your taskbar to view all hidden software background applications operating on your machine current state."
+  },
+  {
+    "course_id": "digital-literacy-bootcamp",
+    "lesson_number": 2,
+    "slide_index": 3,
+    "slide_title": "Taming File Explorer Navigation Nodes",
+    "slide_content": "To locate data payloads on your operating system, you use the File Explorer system (Windows Key + E shortcut matrix). Think of it as a virtual chest of drawers. The root level tracks your storage drive partitions (usually designated as Local Disk C:). The operating system builds clean default folder shortcuts for you to map files safely: Desktop, Documents, Pictures, and Downloads. Files grabbed off internet browser link nodes will always drop into the generic Downloads folder by default. Leaving files scattered inside Downloads causes extreme clutter and slows search indexes down.",
+    "practical_exercise": "Press Windows Key + E right now on your machine to launch File Explorer. Click on 'This PC' in the left side tree map to see exactly how much storage space is left inside your Local Disk C drive partition."
+  },
+  {
+    "course_id": "digital-literacy-bootcamp",
+    "lesson_number": 2,
+    "slide_index": 4,
+    "slide_title": "Android Mobile Triage Configurations",
+    "slide_content": "In many African workspace scenarios, your mobile smartphone acts as your immediate alternative backup data system when power Grids fluctuate. Managing your Android or iOS settings correctly can preserve massive operational capacity. Two vital setups to configure immediately: 1) Data Saver Mode: Restricts background application suites from burning up your expensive internet data subscriptions when you are not actively looking at them. 2) Storage Optimization: Moving heavy downloaded video or text manuals off your device internal phone storage and shifting them onto a physical micro-SD card to prevent system freezing loops.",
+    "practical_exercise": "Swipe down from the top boundary of your smartphone device screen canvas to locate your quick settings drawer map. Tweak your configuration to toggle on 'Data Saver' immediately."
+  },
+  {
+    "course_id": "digital-literacy-bootcamp",
+    "lesson_number": 2,
+    "slide_index": 5,
+    "slide_title": "Lesson 2 Checkpoint: Operating Systems Audit",
+    "slide_content": "Excellent work! You have cleared the core layout principles of operating system architectures across web and mobile ecosystems. You now possess the direct capability to troubleshoot system icons, manage background processes, and audit local workspace allocations under pressure. Let's look at the masterclass video guide on the next slide before triggering your evaluation sequence.",
+    "practical_exercise": "Click the right arrow control to enter the Masterclass Video Screening Room."
+  },
+  {
+    "course_id": "digital-literacy-bootcamp",
+    "lesson_number": 2,
+    "slide_index": 6,
+    "slide_title": "Masterclass Cinema: OS Triage & Environment Control",
+    "slide_content": "WATCH VIDEO TO LEARN MORE INTERACTIVELY: This visual workshop extension unpacks advanced system directory mapping and local environment troubleshooting. Review these steps carefully to streamline your understanding before loading the active quiz node.",
+    "youtube_video_code": "dQw4w9WgXcQ",
+    "is_video_slide": true,
+    "practical_exercise": "Stream this tutorial session locally. Once done, click the action button below to instantly lock in your progress states and trigger your Lesson 2 interactive slider quiz array!"
+  }
+]

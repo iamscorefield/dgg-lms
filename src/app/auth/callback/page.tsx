@@ -81,6 +81,19 @@ export default function AuthCallbackPage() {
           window.localStorage.removeItem("signup_role");
         }
 
+        // 🌟 CRITICAL ROUTING MATRIX CORRECTION
+        // Inspect the active address query array parameters to catch recovery next-hops
+        if (typeof window !== "undefined") {
+          const urlParams = new URLSearchParams(window.location.search);
+          const nextPath = urlParams.get("next");
+
+          if (nextPath) {
+            router.replace(nextPath);
+            return;
+          }
+        }
+
+        // Default baseline landing strip fallback if no specialized parameter exists
         router.replace("/dashboard");
       } catch (e) {
         console.error(e);

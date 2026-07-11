@@ -5,7 +5,7 @@ import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import TopHeader from "@/components/TopHeader";
 import { Toaster } from "react-hot-toast";
-import Script from "next/script"; // 🔥 IMPORTED NEXT.JS SCRIPT PACK FOR CLEANER LOADING
+import Script from "next/script";
 
 export function LayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -17,8 +17,8 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
     pathname.startsWith("/tutor");
 
   return (
-    // 🔥 FIXED: Changed from <body> to <div> to stop invalid nested body tags crashing React hydration
-    <div className="bg-white min-h-screen flex flex-col">
+    // 🔥 FIXED: Added max-w-full and overflow-x-hidden boundary safety buffers to capture stray table overlays
+    <div className="bg-white min-h-screen max-w-full overflow-x-hidden flex flex-col">
       {!hideChrome && (
         <>
           {/* Top header bar */}
@@ -30,7 +30,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Push page content below fixed header + navbar on site pages */}
-      <main className={hideChrome ? "flex-grow" : "flex-grow pt-8 sm:pt-10"}>
+      <main className={hideChrome ? "flex-grow max-w-full" : "flex-grow max-w-full pt-8 sm:pt-10"}>
         {children}
       </main>
 
@@ -38,7 +38,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
 
       <Toaster position="top-center" />
       
-      {/* 🔥 OPTIMIZED: Handled Paystack execution natively via Next.js Script optimization Engine */}
+      {/* Handled Paystack execution natively via Next.js Script optimization Engine */}
       <Script src="https://js.paystack.co/v2/inline.js" strategy="afterInteractive" />
     </div>
   );

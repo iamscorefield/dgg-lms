@@ -1,4 +1,5 @@
 import Sidebar from "@/components/Sidebar";
+import ChatPopup from "@/components/ChatPopup";
 import { createServer } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 
@@ -54,6 +55,8 @@ export default async function StudentResourcesPage() {
             </p>
           </div>
         </div>
+        {/* Floating Chat Component Loaded Globally */}
+        <ChatPopup currentUserId={studentId} role="student" courseId="GENERAL" />
       </div>
     );
   }
@@ -113,6 +116,8 @@ export default async function StudentResourcesPage() {
             </p>
           </div>
         </div>
+        {/* Floating Chat Component Loaded Globally */}
+        <ChatPopup currentUserId={studentId} role="student" courseId="GENERAL" />
       </div>
     );
   }
@@ -253,6 +258,9 @@ export default async function StudentResourcesPage() {
           </section>
         )}
       </div>
+
+      {/* Floating Chat Component Interface Anchor */}
+      <ChatPopup currentUserId={studentId} role="student" courseId="GENERAL" />
     </div>
   );
 }

@@ -1,0 +1,362 @@
+[
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 1,
+    "question_index": 1,
+    "question_type": "objective",
+    "question_text": "Which of these is the main physical brain of the computer that handles all calculations?",
+    "options_array": ["Monitor Screen", "Central Processing Unit (CPU)", "Keyboard Matrix", "Computer Mouse Pointer"],
+    "correct_option_index": 1
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 1,
+    "question_index": 2,
+    "question_type": "objective",
+    "question_text": "What type of memory keeps your computer running fast but loses its data immediately when NEPA takes light without a backup UPS?",
+    "options_array": ["Hard Disk Drive (HDD)", "Random Access Memory (RAM)", "Flash Drive Storage", "Read-Only Memory (ROM)"],
+    "correct_option_index": 1
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 1,
+    "question_index": 3,
+    "question_type": "objective",
+    "question_text": "Which device is strictly considered an INPUT device for your computer configuration?",
+    "options_array": ["Desktop Monitor Screen", "Laser Jet Printer", "Hardware Keyboard", "Audio Sound Speakers"],
+    "correct_option_index": 2
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 1,
+    "question_index": 4,
+    "question_type": "objective",
+    "question_text": "What is the best type of storage drive to look for when buying a laptop to ensure fast boot speeds?",
+    "options_array": ["Floppy Disk Drive", "Solid State Drive (SSD)", "Standard Mechanical Hard Drive (HDD)", "Compact Disc (CD-ROM)"],
+    "correct_option_index": 1
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 1,
+    "question_index": 5,
+    "question_type": "objective",
+    "question_text": "Which port on your laptop framework do you use to hook up an external monitor, TV, or projector line?",
+    "options_array": ["HDMI Port", "Audio Headphone Jack", "Power Charging Port", "Ethernet Cable Socket"],
+    "correct_option_index": 0
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 1,
+    "question_index": 6,
+    "question_type": "objective",
+    "question_text": "What does a standard computer mouse click trigger when you press the right button over an item?",
+    "options_array": ["Closes the application completely", "Opens a context options menu chart", "Deletes the item immediately", "Restarts the operating system"],
+    "correct_option_index": 1
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 1,
+    "question_index": 7,
+    "question_type": "objective",
+    "question_text": "If your laptop screen suddenly freezes completely up on your desk, which key combination helps safely kill unresponsive items?",
+    "options_array": ["Spacebar + Enter", "Ctrl + Alt + Delete", "Shift + Backspace", "Windows Key + L"],
+    "correct_option_index": 1
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 1,
+    "question_index": 8,
+    "question_type": "objective",
+    "question_text": "Which hardware configuration element directly determines how many different applications you can leave open smoothly at the same time?",
+    "options_array": ["Screen Size Dimension", "RAM Capacity size", "Battery Milliampere Rating", "Keyboard backlight color"],
+    "correct_option_index": 1
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 1,
+    "question_index": 9,
+    "question_type": "theory",
+    "options_array": null,
+    "correct_option_index": null,
+    "question_text": "Explain in your own words how you check your laptop hardware specifications (RAM size and storage space) before installing engineering software tools:"
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 1,
+    "question_index": 10,
+    "question_type": "theory",
+    "options_array": null,
+    "correct_option_index": null,
+    "question_text": "Describe your clear emergency plan to save your active project documents if your computer battery suddenly drops below 5% without an available wall power socket nearby:"
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 2,
+    "question_index": 1,
+    "question_type": "objective",
+    "question_text": "Which software system coordinates all hardware tasks, file storage, and running programs on your computer layout?",
+    "options_array": ["Google Chrome", "Operating System (e.g., Windows/macOS)", "Microsoft Word Canvas", "Adobe Photoshop Node"],
+    "correct_option_index": 1
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 2,
+    "question_index": 2,
+    "question_type": "objective",
+    "question_text": "What is the safe default folder destination where your computer puts files you grab off internet links?",
+    "options_array": ["Documents Directory", "Downloads Folder", "Local Desktop Canvas", "System32 Root System"],
+    "correct_option_index": 1
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 2,
+    "question_index": 3,
+    "question_type": "objective",
+    "question_text": "What happens to a file folder when you select it and run the 'Compress to ZIP file' command configuration?",
+    "options_array": ["It deletes all duplicate items", "It packs the size smaller for easy online sharing", "It password-locks the internal items", "It converts the text to code scripts"],
+    "correct_option_index": 1
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 2,
+    "question_index": 4,
+    "question_type": "objective",
+    "question_text": "Which file extension string indicates a standard document file layout meant for reading or printing?",
+    "options_array": [".exe execution code", ".mp3 audio node", ".pdf file ledger", ".zip data package"],
+    "correct_option_index": 2
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 2,
+    "question_index": 5,
+    "question_type": "objective",
+    "question_text": "What occurs when you select a file item on your system workspace and click the 'Cut' operation instead of 'Copy'?",
+    "options_array": ["It creates a duplicate item node", "It leaves the original file where it is", "It prepares to move the item completely out of the current folder", "It wipes the data payload off the memory disk"],
+    "correct_option_index": 2
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 2,
+    "question_index": 6,
+    "question_type": "objective",
+    "question_text": "Where do your deleted project files sit temporarily before being completely scrubbed off your computer storage disk?",
+    "options_array": ["Control Panel Node", "Recycle Bin / Trash Canvas", "Documents Cache Matrix", "Cloud Drive Partition"],
+    "correct_option_index": 1
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 2,
+    "question_index": 7,
+    "question_type": "objective",
+    "question_text": "Which keyboard shortcut helps you instantly duplicate text or asset files in a split second?",
+    "options_array": ["Ctrl + X", "Ctrl + Z", "Ctrl + C", "Ctrl + V"],
+    "correct_option_index": 2
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 2,
+    "question_index": 8,
+    "question_type": "objective",
+    "question_text": "What is the danger of executing unverified file downloads ending with a '.exe' suffix string?",
+    "options_array": ["They change your background wallpaper", "They can run hidden virus scripts that hijack your machine local storage", "They automatically drain your subscription internet data", "They downscale your display monitor resolution grid"],
+    "correct_option_index": 1
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 2,
+    "question_index": 9,
+    "question_type": "theory",
+    "options_array": null,
+    "correct_option_index": null,
+    "question_text": "Outline your systematic directory folder structure layout method to keep all your weekly homework, codes, and projects cleanly separated for your tutors:"
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 2,
+    "question_index": 10,
+    "question_type": "theory",
+    "options_array": null,
+    "correct_option_index": null,
+    "question_text": "Explain the step-by-step procedure to uncompress a folder attachment (.zip) sent to your workspace from an international partner, detailing how you access the internal documents safely:"
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 3,
+    "question_index": 1,
+    "question_type": "objective",
+    "question_text": "What global grid network structure connects computers worldwide to share data pipelines?",
+    "options_array": ["Local Area Intranet", "The Internet Grid System", "Harddisk Motherboard Array", "Microsoft Edge Workspace"],
+    "correct_option_index": 1
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 3,
+    "question_index": 2,
+    "question_type": "objective",
+    "question_text": "Which application tool acts as your native browser portal to display web address records cleanly?",
+    "options_array": ["Google Chrome / Mozilla Firefox", "VLC Media Play Node", "Notepad Text Document Editor", "Command Prompt Shell Container"],
+    "correct_option_index": 0
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 3,
+    "question_index": 3,
+    "question_type": "objective",
+    "question_text": "What does the 'https://' prefix string in a browser address bar verify to an online user?",
+    "options_array": ["The web route contains heavy video downloads", "The network data pipeline is secure and encrypted", "The web link belongs to a government entity", "The portal operates completely offline"],
+    "correct_option_index": 1
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 3,
+    "question_index": 4,
+    "question_type": "objective",
+    "question_text": "What is the primary engine interface tool used to query keywords and discover relative website documents out on the web?",
+    "options_array": ["Search Engine (e.g., Google Search)", "Email Address Sockets", "Web Domain Registry Keys", "File Explorer Index Filters"],
+    "correct_option_index": 0
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 3,
+    "question_index": 5,
+    "question_type": "objective",
+    "question_text": "Which component indicator shows your laptop has successfully established an active data link with an internet hotspot?",
+    "options_array": ["Bluetooth Indicator Node", "Wi-Fi Wave Signal Icon", "Battery Power Charging Bolt", "Caps Lock Highlight Bulb"],
+    "correct_option_index": 1
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 3,
+    "question_index": 6,
+    "question_type": "objective",
+    "question_text": "What occurs when you click a 'Hyperlink' text element on a live web page layout interface?",
+    "options_array": ["It closes down your active browser view window", "It moves your tracking viewport to a fresh web address record page", "It restarts your network router configuration", "It formats your system cache directory"],
+    "correct_option_index": 1
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 3,
+    "question_index": 7,
+    "question_type": "objective",
+    "question_text": "What browser configuration setting saves your online passwords and web links so you don't have to type them every time?",
+    "options_array": ["Incognito Mode Shield", "Bookmarks and Autofill Manager", "Clear Browsing Data Filter", "Task Manager Tracker"],
+    "correct_option_index": 1
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 3,
+    "question_index": 8,
+    "question_type": "objective",
+    "question_text": "Why should you avoid using open, free, unencrypted public airport Wi-Fi links to run corporate banking or admin logins?",
+    "options_array": ["They cap your maximum download size limits", "Hackers on the same open line can intercept your login keys", "They drain your hardware battery capacity fast", "They block access to search query tools"],
+    "correct_option_index": 1
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 3,
+    "question_index": 9,
+    "question_type": "theory",
+    "options_array": null,
+    "correct_option_index": null,
+    "question_text": "Explain the structural difference between a 'Search Engine' (like Google) and a 'Web Browser' (like Chrome) to show you understand how internet navigation works:"
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 3,
+    "question_index": 10,
+    "question_type": "theory",
+    "options_array": null,
+    "correct_option_index": null,
+    "question_text": "Detail your strategy for optimizing internet usage during a remote study cohort session, especially when balancing low mobile data plans or high connection drop rates:"
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 4,
+    "question_index": 1,
+    "question_type": "objective",
+    "question_text": "Which of these stands for an official, unique corporate electronic address system meant for business outreach tracks?",
+    "options_array": ["WhatsApp Mobile Node", "Email Address Socket (e.g., name@dgg.com)", "Instagram Profile ID Handle", "Zoom Room Entry Pin Link"],
+    "correct_option_index": 1
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 4,
+    "question_index": 2,
+    "question_type": "objective",
+    "question_text": "Where do incoming project update messages sit inside your email platform workspace by default?",
+    "options_array": ["Sent Folder Partition", "Primary Inbox Console", "Spam Security Bucket", "Draft Storage Ledger"],
+    "correct_option_index": 1
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 4,
+    "question_index": 3,
+    "question_type": "objective",
+    "question_text": "What email interface feature do you click to add external PDF documents or code files to an outgoing message?",
+    "options_array": ["Subject Input Line", "Paperclip Attach File Button", "Signature Sync Widget", "CC / BCC Carbon Sockets"],
+    "correct_option_index": 1
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 4,
+    "question_index": 4,
+    "question_type": "objective",
+    "question_text": "What type of email message layout context gets flagged into the 'Spam/Junk' folder automatically by security algorithms?",
+    "options_array": ["Verified admin registration token links", "Unsolicited promotional scam links and bulk ads", "Curriculum update notices from your tutor", "Password reset confirmations"],
+    "correct_option_index": 1
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 4,
+    "question_index": 5,
+    "question_type": "objective",
+    "question_text": "What should you write in the 'Subject' line box of an outgoing email package to ensure corporate clarity?",
+    "options_array": ["Leave it completely blank", "Your full name text string only", "A short summary phrase clearly describing the purpose of the email", "The entire email body message"],
+    "correct_option_index": 2
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 4,
+    "question_index": 6,
+    "question_type": "objective",
+    "question_text": "Where does your email client put a message you are writing if you close the window before hitting send?",
+    "options_array": ["Trash Folder Ledger", "Drafts Storage Directory", "Sent Mail Hub Component", "Archive Storage Vault"],
+    "correct_option_index": 1
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 4,
+    "question_index": 7,
+    "question_type": "objective",
+    "question_text": "What action does the 'Reply All' control execute during a group project email conversation?",
+    "options_array": ["Sends your answer to the original sender only", "Bounces the message back to your own server box", "Sends your response to everyone included on the original thread", "Deletes the conversation history for safety"],
+    "correct_option_index": 2
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 4,
+    "question_index": 8,
+    "question_type": "objective",
+    "question_text": "What is the primary indicator of a Phishing Email attack sent by online bad actors?",
+    "options_array": ["It contains direct links to premium curriculum files", "It mimics corporate bank layouts and pressures you to click urgent verification links", "It comes with a .pdf assignment document attached", "It shows up inside your primary inbox console view"],
+    "correct_option_index": 1
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 4,
+    "question_index": 9,
+    "question_type": "theory",
+    "options_array": null,
+    "correct_option_index": null,
+    "question_text": "Draft a formal, professional email submission message to your DGG assignment review desk, detailing that you have attached your week one technical project files for audit reviews:"
+  },
+  {
+    "course_id": "basic-computer-skills",
+    "lesson_number": 4,
+    "question_index": 10,
+    "question_type": "theory",
+    "options_array": null,
+    "correct_option_index": null,
+    "question_text": "Detail the specific security steps you will take to evaluate a suspicious email message claiming your student portal password has expired to ensure you do not compromise your profile credentials:"
+  }
+]

@@ -19,7 +19,7 @@ export default function Sidebar({ role }: { role: Role }) {
       {/* Mobile Hamburger */}
       <button
         onClick={() => setOpen(!open)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-[#512d7c] text-white rounded-lg"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-slate-900 text-white rounded-lg border-0 cursor-pointer"
       >
         Menu
       </button>
@@ -27,7 +27,7 @@ export default function Sidebar({ role }: { role: Role }) {
       {/* Fixed Logout button at top-right of dashboard */}
       <button
         onClick={handleLogout}
-        className="fixed top-4 right-4 z-40 px-4 py-2 bg-[#f2b42c] text-black text-sm font-bold rounded-full shadow-md hover:bg-[#e0a51a] transition"
+        className="fixed top-4 right-4 z-40 px-4 py-2 bg-[#f2b42c] text-black text-sm font-bold rounded-full shadow-md hover:bg-[#d9a123] transition cursor-pointer border-0"
       >
         Logout
       </button>
@@ -41,11 +41,14 @@ export default function Sidebar({ role }: { role: Role }) {
         {/* Make inner content scrollable */}
         <div className="h-full flex flex-col">
           {/* Logo (fixed at top of sidebar) */}
-          <div className="p-6 flex items-center gap-3 shrink-0">
+          <div className="p-6 flex items-center gap-3 shrink-0 text-left">
             <img
-              src="/images/logo.png"
+              src="/favicon.ico"
               alt="DGG Academy"
-              className="h-12 w-auto"
+              className="h-10 w-auto object-contain p-1 bg-[#f2b42c] rounded-full border border-[#512d7c]"
+              onError={(e) => {
+                e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23512d7c'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3C/svg%3E";
+              }}
             />
             <span className="text-xl font-bold text-[#512d7c]">
               DGG Academy
@@ -53,7 +56,7 @@ export default function Sidebar({ role }: { role: Role }) {
           </div>
 
           {/* Scrollable nav area */}
-          <div className="flex-1 overflow-y-auto px-6 pb-6">
+          <div className="flex-1 overflow-y-auto px-6 pb-6 text-left">
             <nav className="space-y-3 text-sm font-medium">
               {role === "student" && (
                 <>
@@ -87,6 +90,23 @@ export default function Sidebar({ role }: { role: Role }) {
                   >
                     Browse Courses
                   </a>
+                  <a
+                    href="/dashboard/student/in-progress"
+                    className="block py-2.5 px-4 text-[#512d7c] hover:bg-[#f2b42c]/10 rounded-lg transition flex items-center justify-between"
+                  >
+                    <span>My In-Progress Tracker</span>
+                    <span className="text-[9px] font-mono bg-purple-100 text-[#512d7c] px-1.5 py-0.5 rounded font-bold">LIVE</span>
+                  </a>
+                  
+                  {/* 🌟 NEW SELF-TRAFFICKING LEARNING CALENDAR SLIDER LINK */}
+                  <a
+                    href="/dashboard/student/schedule"
+                    className="block py-2.5 px-4 text-[#512d7c] hover:bg-[#f2b42c]/10 rounded-lg transition flex items-center justify-between border border-dashed border-purple-200/60 bg-purple-50/30"
+                  >
+                    <span>Learning Schedule Matrix</span>
+                    <span className="text-[9px] font-mono bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold">NEW</span>
+                  </a>
+
                   <a
                     href="/dashboard/student/resources"
                     className="block py-2.5 px-4 text-[#512d7c] hover:bg-[#f2b42c]/10 rounded-lg transition"

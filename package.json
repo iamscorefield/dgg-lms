@@ -12,12 +12,16 @@
     "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.91.0",
+    "date-fns": "^4.4.0",
     "framer-motion": "^12.40.0",
     "lucide-react": "^1.21.0",
     "next": "16.1.4",
+    "node-2fa": "^2.0.3",
+    "qrcode": "^1.5.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-hot-toast": "^2.6.0",
+    "resend": "^6.17.2",
     "zod": "^4.3.5"
   },
   "devDependencies": {

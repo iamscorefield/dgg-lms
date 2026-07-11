@@ -1,4 +1,5 @@
 import Sidebar from "@/components/Sidebar";
+import ChatPopup from "@/components/ChatPopup";
 import { createServer } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 
@@ -44,10 +45,12 @@ export default async function TutorResourcesPage() {
     redirect("/login");
   }
 
+  const tutorId = session.user.id;
+
   const { data: resources, error } = await supabase
     .from("tutor_resources")
     .select("id, title, content, video_url, pdf_url, created_at")
-    .eq("tutor_id", session.user.id)
+    .eq("tutor_id", tutorId)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -158,6 +161,9 @@ export default async function TutorResourcesPage() {
           </div>
         )}
       </div>
+
+      {/* Floating Chat Component Interface Anchor */}
+      <ChatPopup currentUserId={tutorId} role="tutor" courseId="GENERAL" />
     </div>
   );
 }
