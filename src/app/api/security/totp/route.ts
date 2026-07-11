@@ -17,18 +17,16 @@ export async function POST(req: Request) {
 
     const userId = session.user.id;
 
-    // --- ACTION 1: ENROLL (WITH AUTOMATIC STALE FACTOR CLEANUP) ---
+    // --- ACTION 1: ENROLL ---
     if (action === "enroll") {
-      // 1. Fetch any existing authenticator factors for this user first
       const { data: factors } = await supabase.auth.mfa.listFactors();
       
-      // 2. If there are any stale "unverified" factors, delete them cleanly so they don't block us
-      const existingUnverified = factors?.totp?.filter(f => f.status === "unverified") || [];
+      // FIX 1: Cast f.status to string to safely find "unverified"
+      const existingUnverified = factors?.totp?.filter(f => (f.status as string) === "unverified") || [];
       for (const factor of existingUnverified) {
         await supabase.auth.mfa.unenroll({ factorId: factor.id });
       }
 
-      // 3. Now start a fresh enrollment session with zero conflicts
       const { data: mfaEnroll, error: enrollError } = await supabase.auth.mfa.enroll({
         factorType: "totp",
         issuer: "DGG Academy",
@@ -39,7 +37,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: enrollError.message }, { status: 400 });
       }
 
-      // Safely register the factor ID to your public profile tracking metadata
       await supabase
         .from("profiles")
         .update({ totp_secret: mfaEnroll.id })
@@ -62,7 +59,8 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: factorsError.message }, { status: 400 });
       }
 
-      const pendingFactor = factors.totp?.find(f => f.status === "unverified");
+      // FIX 2: Cast f.status to string here as well to check for "unverified"
+      const pendingFactor = factors.totp?.find(f => (f.status as string) === "unverified");
       if (!pendingFactor) {
         return NextResponse.json({ error: "No active unverified enrollment session found." }, { status: 400 });
       }
