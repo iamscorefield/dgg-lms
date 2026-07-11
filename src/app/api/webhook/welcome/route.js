@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
-
+// Forces Next.js to skip pre-rendering this endpoint as a static page during build time
+export const dynamic = "force-dynamic";
 // Initialize the Resend pipeline using your secure environment token
 const resend = new Resend(process.env.RESEND_API_KEY);
 
