@@ -221,7 +221,7 @@ export default function StudentProfilePage() {
       const { data: factors } = await supabase.auth.mfa.listFactors();
       
       // FIXED: Cast f.status to string to check safely here too
-      const activeFactor = factors.totp?.find(f => (f.status as string) === "verified" || (f.status as string) === "unverified");
+      const activeFactor = factors?.totp?.find(f => (f.status as string) === "verified" || (f.status as string) === "unverified");
       
       if (activeFactor) {
         await supabase.auth.mfa.unenroll({ factorId: activeFactor.id });
