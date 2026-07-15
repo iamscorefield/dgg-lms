@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 // Initialize Supabase with private server-side environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-// Use Service Role Key for secure admin bypass, or Anon Key if RLS handles it
+// Use Service Role Key for secure admin bypass
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -11,7 +11,8 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { id, fullName, trackName, courseScope, completionDate } = body;
+    // Destructure the new averageScore from the request body
+    const { id, fullName, trackName, courseScope, completionDate, averageScore } = body;
 
     if (!id || !fullName || !trackName) {
       return NextResponse.json(
@@ -31,6 +32,8 @@ export async function POST(request: Request) {
           course_scope: courseScope,
           completion_date: completionDate,
           verification_status: "verified",
+          // Convert string score to numeric for database compatibility
+          average_score: Number(averageScore || 85.00),
         },
       ]);
 

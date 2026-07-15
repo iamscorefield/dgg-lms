@@ -80,8 +80,8 @@ export default function CertificateVerificationPage() {
       const { data: adminData, error: adminError } = await supabase
         .from("admin_ledgers")
         .select(`
-          id, full_name, track_name, course_scope, completion_date, verification_status
-        `)
+          id, full_name, track_name, course_scope, completion_date, verification_status, average_score
+        `) // Added average_score schema target to selection criteria
         .eq("id", cleanQuery)
         .maybeSingle();
 
@@ -95,7 +95,7 @@ export default function CertificateVerificationPage() {
           trackName: adminData.track_name,
           startDate: "On-Site Cohort Base",
           completion_date: adminData.completion_date,
-          avgScore: 100, // Default institutional pass status
+          avgScore: Number(adminData.average_score || 85.00), // Binding historical metrics directly from columns
           capstoneName: "Integrated Module Portfolio",
           capstoneUrl: "#",
           status: (adminData.verification_status as any) || "verified",

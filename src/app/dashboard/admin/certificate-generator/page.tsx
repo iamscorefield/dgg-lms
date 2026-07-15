@@ -25,6 +25,7 @@ export default function AdminCertificateGeneratorPage() {
     "Digital Literacy, Basic Computing Operations, Generative AI Engineering, Graphic Design Foundations via Canva, Web Structure Basics, and Project-Based Game Logic Creation."
   );
   const [inputDate, setInputDate] = useState("September 3, 2026");
+  const [inputScore, setInputScore] = useState("88.50"); // Added Score State
   const [inputId, setInputId] = useState("DGG-TN-20260903");
   const [inputStatus, setInputStatus] = useState("verified");
   const [isPushing, setIsPushing] = useState(false);
@@ -65,6 +66,11 @@ export default function AdminCertificateGeneratorPage() {
 
     const randomHash = Math.floor(10000000 + Math.random() * 90000000);
     setInputId(`${codePrefix}${randomHash}`);
+    
+    // Automatically sets a realistic dynamic score alongside tracking ID
+    const randomScore = (Math.random() * (98 - 76) + 76).toFixed(2);
+    setInputScore(randomScore);
+    
     toast.success("New Unique Tracking ID Instanced!");
   };
 
@@ -74,6 +80,7 @@ export default function AdminCertificateGeneratorPage() {
     setInputScope("");
     setInputDate("");
     setInputId("");
+    setInputScore("0.00");
   };
 
   const pushRecordToSupabase = async () => {
@@ -95,6 +102,7 @@ export default function AdminCertificateGeneratorPage() {
           trackName: inputTitle,
           courseScope: inputScope,
           completionDate: inputDate,
+          averageScore: inputScore, // Added tracking variable mapping to payload payload
         }),
       });
 
@@ -595,6 +603,21 @@ export default function AdminCertificateGeneratorPage() {
                 </div>
 
                 <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#512d7c] mb-2 flex items-center gap-1">
+                    <Award size={12} /> Milestone Scoreboard Average (%)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    value={inputScore}
+                    onChange={(e) => setInputScore(e.target.value)}
+                    className="w-full p-3 bg-[#f8f7fc] border border-[#ebe7f4] rounded-xl text-xs font-medium focus:outline-none focus:border-[#512d7c] focus:bg-white transition"
+                  />
+                </div>
+
+                <div>
                   <label className="block text-[10px] font-bold uppercase tracking-wider text-[#512d7c] mb-2">
                     System Registry Credential ID
                   </label>
@@ -686,7 +709,7 @@ export default function AdminCertificateGeneratorPage() {
                       )}
                     </div>
                     <div className={`status-badge ${inputStatus === "verified" ? "verified" : ""}`}>
-                      {inputStatus === "verified" ? "VERIFIED SYSTEM CREDENTIAL" : "PREVIEW SPECIMEN TEMPLATE"}
+                      {inputStatus === "verified" ? `VERIFIED CREDENTIAL | SCORE: ${inputScore}%` : "PREVIEW SPECIMEN TEMPLATE"}
                     </div>
                   </div>
 
