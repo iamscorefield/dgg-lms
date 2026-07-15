@@ -6,7 +6,7 @@ import { createBrowser } from "@/lib/supabase-client";
 import toast from "react-hot-toast";
 
 interface StudySlot {
-  id?: string; // Supabase Primary Key ID if row exists
+  id?: string;
   label: string;
   time: string;
   type: "study" | "break";
@@ -23,18 +23,15 @@ export default function CalendarSlider() {
   const [currentTime, setCurrentTime] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
-  // Modal Modification Context Controllers
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   
-  // Field binding states
   const [inputLabel, setInputLabel] = useState("");
   const [inputCourse, setInputCourse] = useState("");
   const [inputModule, setInputModule] = useState(1);
   const [inputLesson, setInputLesson] = useState(1);
   const [inputTime, setInputTime] = useState("");
 
-  // Default Blueprint Array Template Core Map Configuration
   const defaultBlueprint = (): StudySlot[] => [
     { label: "Lesson 1 (Deep Focus Hour)", time: "08:00 AM - 09:00 AM", type: "study", courseTitle: "01. Digital Ecosystems Foundational Prep", moduleNo: 1, lessonNo: 1, email_reminder_enabled: false },
     { label: "Lesson 2 (Deep Focus Hour + Test)", time: "09:00 AM - 10:00 AM", type: "study", courseTitle: "01. Digital Ecosystems Foundational Prep", moduleNo: 1, lessonNo: 2, email_reminder_enabled: false },
@@ -45,14 +42,12 @@ export default function CalendarSlider() {
 
   const [scheduleGrid, setScheduleGrid] = useState<StudySlot[]>(defaultBlueprint());
 
-  // 1. Live Ticker Clock Context
   useEffect(() => {
     setCurrentTime(format(new Date(), "hh:mm:ss a"));
     const timer = setInterval(() => setCurrentTime(format(new Date(), "hh:mm:ss a")), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // 2. Fetch active records from Supabase on Selected Date Change
   const fetchDaySchedule = useCallback(async (dateTarget: Date) => {
     setLoading(true);
     const dateString = format(dateTarget, "yyyy-MM-dd");
@@ -71,20 +66,30 @@ export default function CalendarSlider() {
       if (error) throw error;
 
       if (data && data.length > 0) {
-        // Map database scheme to local component matrix structure
-        const mappedGrid: StudySlot[] = data.map((row: any) => ({
-          id: row.id,
-          label: row.course_title ? `Focus: Module ${row.module_number}` : "Decompression Break",
-          time: row.start_time.substring(0, 5), // '08:00:00' -> '08:00'
-          type: row.lesson_number === 0 ? "break" : "study",
-          courseTitle: row.course_title,
-          moduleNo: row.module_number,
-          lessonNo: row.lesson_number,
-          email_reminder_enabled: row.email_reminder_enabled,
-        }));
+        const mappedGrid: StudySlot[] = data.map((row: any) => {
+          // Helper to convert 24h format database time back to frontend display range string
+          const dbTime = row.start_time.substring(0, 5);
+          let timeRangeString = `${dbTime} Allocation Unit`;
+          
+          if(dbTime === "08:00") timeRangeString = "08:00 AM - 09:00 AM";
+          if(dbTime === "09:00") timeRangeString = "09:00 AM - 10:00 AM";
+          if(dbTime === "10:00") timeRangeString = "10:00 AM - 12:00 PM";
+          if(dbTime === "12:00") timeRangeString = "12:00 PM - 01:00 PM";
+          if(dbTime === "13:00") timeRangeString = "01:00 PM - 02:00 PM";
+
+          return {
+            id: row.id,
+            label: row.lesson_number === 0 ? "Strategic Mental Break (Decompress)" : row.course_title ? `Lesson ${row.lesson_number} (Active Focus Track)` : "Study Hour Slot",
+            time: timeRangeString,
+            type: row.lesson_number === 0 ? "break" : "study",
+            courseTitle: row.course_title,
+            moduleNo: row.module_number,
+            lessonNo: row.lesson_number,
+            email_reminder_enabled: row.email_reminder_enabled,
+          };
+        });
         setScheduleGrid(mappedGrid);
       } else {
-        // If no records saved for this date, default back to clear mockup state fallback
         setScheduleGrid(defaultBlueprint());
       }
     } catch (err: any) {
@@ -98,19 +103,25 @@ export default function CalendarSlider() {
     fetchDaySchedule(selectedDate);
   }, [selectedDate, fetchDaySchedule]);
 
-  // 3. Open Modal for custom updates
   const handleOpenModifier = (index: number) => {
     const slot = scheduleGrid[index];
     setEditingIndex(index);
     setInputLabel(slot.label);
-    setInputTime(slot.time);
+    
+    // Extends display helper defaults directly into the editing input block field
+    let defaultTimeVal = "08:00";
+    if (index === 1) defaultTimeVal = "09:00";
+    if (index === 2) defaultTimeVal = "10:00";
+    if (index === 3) defaultTimeVal = "12:00";
+    if (index === 4) defaultTimeVal = "13:00";
+    
+    setInputTime(defaultTimeVal);
     setInputCourse(slot.courseTitle || "");
     setInputModule(slot.moduleNo || 1);
     setInputLesson(slot.lessonNo || 1);
     setIsModalOpen(true);
   };
 
-  // 4. Save and Commit Mutation to Supabase Row
   const handleSaveModification = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingIndex === null) return;
@@ -122,10 +133,23 @@ export default function CalendarSlider() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return toast.error("Session missing.");
 
-      // Parse text inputs cleanly into proper Postgres Time stamps
-      let formattedTime = inputTime;
-      if (!inputTime.includes(":")) formattedTime = "08:00:00";
-      if (formattedTime.length === 5) formattedTime += ":00"; // '08:00' -> '08:00:00'
+      // CRITICAL STRIP: Strips range expressions down to strict, clean 24-hour database clock formats
+      let cleanedTime = inputTime.trim();
+      if (cleanedTime.includes(" - ")) {
+        cleanedTime = cleanedTime.split(" - ")[0]; // Extract left side starting time unit
+      }
+      
+      // Clean letters or spaces if mixed from user keystrokes
+      if (cleanedTime.toUpperCase().includes("AM") || cleanedTime.toUpperCase().includes("PM")) {
+        if(cleanedTime.startsWith("01") || cleanedTime.startsWith("1")) cleanedTime = "13:00";
+        if(cleanedTime.startsWith("08")) cleanedTime = "08:00";
+        if(cleanedTime.startsWith("09")) cleanedTime = "09:00";
+        if(cleanedTime.startsWith("10")) cleanedTime = "10:00";
+        if(cleanedTime.startsWith("12")) cleanedTime = "12:00";
+      }
+
+      if (!cleanedTime.includes(":")) cleanedTime = "08:00:00";
+      if (cleanedTime.length === 5) cleanedTime += ":00"; // Transforms '08:00' into safe PostgreSQL format '08:00:00'
 
       const dbPayload = {
         user_id: user.id,
@@ -133,19 +157,17 @@ export default function CalendarSlider() {
         module_number: Number(inputModule),
         lesson_number: currentSlot.type === "break" ? 0 : Number(inputLesson),
         scheduled_date: targetDateStr,
-        start_time: formattedTime,
+        start_time: cleanedTime, 
         email_reminder_enabled: currentSlot.email_reminder_enabled || false,
       };
 
       if (currentSlot.id) {
-        // Run update query if record row already exists in database
         const { error } = await supabase
           .from("student_learning_schedules")
           .update(dbPayload)
           .eq("id", currentSlot.id);
         if (error) throw error;
       } else {
-        // Insert new record entry if first time setup configuration
         const { error } = await supabase
           .from("student_learning_schedules")
           .insert([dbPayload]);
@@ -154,13 +176,12 @@ export default function CalendarSlider() {
 
       toast.success("Schedule committed securely to database!");
       setIsModalOpen(false);
-      fetchDaySchedule(selectedDate); // Re-pull data cleanly
+      fetchDaySchedule(selectedDate);
     } catch (err: any) {
       toast.error(`Database error: ${err.message}`);
     }
   };
 
-  // 5. Toggle Hourly SMTP Email Alert switches
   const handleToggleEmailAlert = async (index: number, currentVal: boolean) => {
     const slot = scheduleGrid[index];
     if (!slot.id) {
@@ -216,7 +237,6 @@ export default function CalendarSlider() {
   return (
     <div className="w-full bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-6 text-left relative">
       
-      {/* Dynamic Status Engine */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-50 pb-4">
         <div>
           <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">DGG Live LMS-Space</span>
@@ -229,14 +249,12 @@ export default function CalendarSlider() {
         </div>
       </div>
 
-      {/* Week Navigation Strip controls */}
       <div className="flex items-center justify-between">
         <button onClick={() => setCurrentWeekStart(addDays(currentWeekStart, -7))} className="text-xs font-bold text-gray-500 hover:text-[#512d7c] transition bg-gray-50 px-3 py-1.5 rounded-xl border-0 cursor-pointer">◀ Prev Week</button>
         <h3 className="font-extrabold text-gray-800 text-sm md:text-base">{format(selectedDate, "eeee, MMMM do, yyyy")}</h3>
         <button onClick={() => setCurrentWeekStart(addDays(currentWeekStart, 7))} className="text-xs font-bold text-gray-500 hover:text-[#512d7c] transition bg-gray-50 px-3 py-1.5 rounded-xl border-0 cursor-pointer">Next Week ▶</button>
       </div>
 
-      {/* 7 Days Slider Bar Row */}
       <div className="grid grid-cols-7 gap-2">
         {weekDays.map((day) => {
           const isSelected = isSameDay(day, selectedDate);
@@ -255,7 +273,6 @@ export default function CalendarSlider() {
         })}
       </div>
 
-      {/* Timeline rendering block area */}
       <div className="space-y-4 pt-4 border-t border-gray-100">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h4 className="text-sm font-black text-slate-800 uppercase tracking-wide">Target Allocation Track</h4>
@@ -299,7 +316,6 @@ export default function CalendarSlider() {
         )}
       </div>
 
-      {/* The Dynamic Form Modification Modal Component Overlay */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <form onSubmit={handleSaveModification} className="bg-white rounded-3xl p-6 w-full max-w-md space-y-4 shadow-2xl border border-gray-100">
@@ -323,7 +339,7 @@ export default function CalendarSlider() {
 
             <div className="space-y-1">
               <label className="text-xs font-bold text-gray-500 block">Start Timestamp Hour Range (24H Format standard)</label>
-              <input type="text" value={inputTime} onChange={(e) => setInputTime(e.target.value)} className="w-full text-sm font-semibold border border-gray-200 rounded-xl p-2.5 outline-none" placeholder="e.g., 08:00" required />
+              <input type="text" value={inputTime} onChange={(e) => setInputTime(e.target.value)} className="w-full text-sm font-semibold border border-gray-200 rounded-xl p-2.5 outline-none" placeholder="e.g., 08:00 or 13:00" required />
             </div>
 
             <div className="flex items-center gap-2 justify-end pt-2">

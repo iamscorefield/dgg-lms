@@ -219,6 +219,12 @@ export default function Sidebar({ role }: { role: Role }) {
                   >
                     Payments &amp; Enrollments
                   </a>
+                  <a
+                    href="/dashboard/admin/certificate-generator"
+                    className="block py-2.5 px-4 text-[#512d7c] hover:bg-[#f2b42c]/10 rounded-lg transition"
+                  >
+                    Certificate Generator
+                  </a>
                 </>
               )}
 
