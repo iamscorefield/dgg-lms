@@ -7,6 +7,7 @@ export default function Footer() {
         <div className="mt-6 flex justify-center gap-8 text-sm text-gray-600">
           <a href="/privacy" className="hover:text-[#512d7c]">Privacy Policy</a>
           <a href="/terms" className="hover:text-[#512d7c]">Terms of Service</a>
+          <a href="/sitemap" className="hover:text-[#512d7c]">Sitemap</a>
           <a href="/contact" className="hover:text-[#512d7c]">Contact Us</a>
         </div>
       </div>

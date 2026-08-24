@@ -13,7 +13,9 @@ import {
   Calendar, 
   User, 
   FileCode,
-  LogOut
+  LogOut,
+  CheckCircle,
+  MessageSquare
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -25,9 +27,18 @@ export default function AdminCertificateGeneratorPage() {
     "Digital Literacy, Basic Computing Operations, Generative AI Engineering, Graphic Design Foundations via Canva, Web Structure Basics, and Project-Based Game Logic Creation."
   );
   const [inputDate, setInputDate] = useState("September 3, 2026");
-  const [inputScore, setInputScore] = useState("88.50"); // Added Score State
+  const [inputScore, setInputScore] = useState("88.50");
   const [inputId, setInputId] = useState("DGG-TN-20260903");
   const [inputStatus, setInputStatus] = useState("verified");
+  
+  // RECRUITER DOSSIER STATES
+  const [inputAttendance, setInputAttendance] = useState("95.00");
+  const [inputWeeklyBreakdown, setInputWeeklyBreakdown] = useState("Week 1: 5/5 Days | Week 2: 5/5 Days | Week 3: 4/5 Days | Week 4: 5/5 Days");
+  const [inputDiscipline, setInputDiscipline] = useState("Exemplary punctuality and rigorous adherence to studio code rules.");
+  const [inputTeamwork, setInputTeamwork] = useState("Collaborated effectively during group projects, demonstrating strong peer leadership.");
+  const [inputHost, setInputHost] = useState("Active lab participant with exceptional consistency during practical sessions.");
+  const [inputCeo, setInputCeo] = useState("Recommended for top-tier junior technical roles and digital production pipelines.");
+
   const [isPushing, setIsPushing] = useState(false);
   const [logoError, setLogoError] = useState(false);
 
@@ -52,9 +63,11 @@ export default function AdminCertificateGeneratorPage() {
       );
       setInputId("DGG-MN-20260607");
     } else {
+      // CUSTOM TEMPLATE FIX: Instantly generate a unique custom hash to avoid primary key collision errors on Supabase
       setInputTitle("");
       setInputScope("");
-      setInputId("DGG-CS-CUSTOM");
+      const randomHash = Math.floor(10000000 + Math.random() * 90000000);
+      setInputId(`DGG-CS-${randomHash}`);
     }
   };
 
@@ -67,7 +80,6 @@ export default function AdminCertificateGeneratorPage() {
     const randomHash = Math.floor(10000000 + Math.random() * 90000000);
     setInputId(`${codePrefix}${randomHash}`);
     
-    // Automatically sets a realistic dynamic score alongside tracking ID
     const randomScore = (Math.random() * (98 - 76) + 76).toFixed(2);
     setInputScore(randomScore);
     
@@ -81,6 +93,12 @@ export default function AdminCertificateGeneratorPage() {
     setInputDate("");
     setInputId("");
     setInputScore("0.00");
+    setInputAttendance("100.00");
+    setInputWeeklyBreakdown("");
+    setInputDiscipline("");
+    setInputTeamwork("");
+    setInputHost("");
+    setInputCeo("");
   };
 
   const pushRecordToSupabase = async () => {
@@ -102,7 +120,13 @@ export default function AdminCertificateGeneratorPage() {
           trackName: inputTitle,
           courseScope: inputScope,
           completionDate: inputDate,
-          averageScore: inputScore, // Added tracking variable mapping to payload payload
+          averageScore: inputScore,
+          attendanceRate: inputAttendance,
+          weeklyBreakdown: inputWeeklyBreakdown,
+          disciplineComment: inputDiscipline,
+          teamworkComment: inputTeamwork,
+          hostComment: inputHost,
+          ceoComment: inputCeo,
         }),
       });
 
@@ -150,9 +174,9 @@ export default function AdminCertificateGeneratorPage() {
           .accent-block-1 { position: absolute; top: -40px; left: -40px; width: 208px; height: 80px; background-color: #512d7c !important; transform: rotate(45deg); -webkit-print-color-adjust: exact !important; }
           .accent-block-2 { position: absolute; top: -20px; left: -20px; width: 208px; height: 16px; background-color: #f2b42c !important; transform: rotate(45deg); -webkit-print-color-adjust: exact !important; }
           .cert-header { display: flex; justify-content: space-between; align-items: center; padding-left: 64px; text-align: left; }
-          .brand-logo-img { height: 48px; width: auto; object-fit: contain; }
-          .brand-text-wrapper h4 { margin: 0; font-size: 13px; font-weight: 900; letter-spacing: 0.18em; color: #512d7c !important; }
-          .brand-text-wrapper span { font-size: 9px; font-weight: 700; color: #64748b !important; display: block; margin-top: 4px; }
+          .brand-logo-img { height: 96px !important; width: auto; object-fit: contain; }
+          .brand-text-wrapper h4 { margin: 0; font-size: 16px; font-weight: 900; letter-spacing: 0.18em; color: #512d7c !important; }
+          .brand-text-wrapper span { font-size: 11px; font-weight: 700; color: #64748b !important; display: block; margin-top: 4px; }
           .status-badge { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 12px; border-radius: 6px; border: 1px solid #ebe7f4; background-color: #f8f7fc !important; color: #64748b !important; }
           .status-badge.verified { background-color: #e6f6f0 !important; color: #00875a !important; border-color: #b3f0db !important; }
           .cert-body { display: flex; flex-direction: column; justify-content: center; align-items: center; max-width: 800px; margin: 0 auto; gap: 16px; }
@@ -184,7 +208,7 @@ export default function AdminCertificateGeneratorPage() {
         </div>
         <script>
           window.onload = function() { setTimeout(function() { window.print(); window.close(); }, 400); };
-        <\/script>
+        </script>
       </body>
       </html>
     `);
@@ -199,7 +223,6 @@ export default function AdminCertificateGeneratorPage() {
   return (
     <div className="flex min-h-screen bg-[#fcfbfe] text-[#1e1b4b] font-sans selection:bg-[#512d7c]/10">
       
-      {/* SCOPED STYLE BLOCK TO FORCE PERFECT INLINE DESIGN ARCHITECTURE RENDERS */}
       <style dangerouslySetInnerHTML={{__html: `
         .cert-canvas-frame {
           width: 1000px !important;
@@ -258,20 +281,20 @@ export default function AdminCertificateGeneratorPage() {
           gap: 12px !important;
         }
         .brand-logo-img {
-          height: 48px !important;
+          height: 96px !important; /* Bolded / doubled logo display size */
           width: auto !important;
           object-fit: contain !important;
         }
         .brand-text-wrapper h4 {
           margin: 0 !important;
-          font-size: 13px !important;
+          font-size: 16px !important;
           font-weight: 900 !important;
           letter-spacing: 0.18em !important;
           color: #512d7c !important;
           line-height: 1 !important;
         }
         .brand-text-wrapper span {
-          font-size: 9px !important;
+          font-size: 11px !important;
           font-weight: 700 !important;
           letter-spacing: 0.05em !important;
           color: #64748b !important;
@@ -491,13 +514,10 @@ export default function AdminCertificateGeneratorPage() {
         }
       `}} />
 
-      {/* NAVIGATION PANEL */}
       <Sidebar role="admin" />
 
-      {/* APPLICATION CHASSIS CANVAS */}
       <div className="flex-1 lg:ml-64 w-full overflow-hidden flex flex-col">
         
-        {/* UPPER CONSOLE UTILITY STRIP */}
         <div className="h-16 border-b border-[#ebe7f4] bg-white px-4 sm:px-8 flex items-center justify-between flex-shrink-0">
           <div className="relative max-w-md w-full hidden sm:block">
             <input 
@@ -516,7 +536,6 @@ export default function AdminCertificateGeneratorPage() {
           </div>
         </div>
 
-        {/* VIEWPORT CONSOLE */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-8">
           
           <div className="text-left">
@@ -530,7 +549,6 @@ export default function AdminCertificateGeneratorPage() {
 
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
             
-            {/* LEFT INPUT CONTROLS PANEL */}
             <div className="xl:col-span-4 bg-white border border-[#ebe7f4] p-6 rounded-3xl shadow-xs space-y-6">
               <h2 className="text-xs font-black uppercase tracking-wider text-[#512d7c] pb-3 border-b border-[#ebe7f4] flex items-center gap-2">
                 <KeyRound size={16} /> Ledger Record Controls
@@ -584,7 +602,7 @@ export default function AdminCertificateGeneratorPage() {
                   <textarea
                     value={inputScope}
                     onChange={(e) => setInputScope(e.target.value)}
-                    rows={4}
+                    rows={3}
                     style={{ resize: "none" }}
                     className="w-full p-3 bg-[#f8f7fc] border border-[#ebe7f4] rounded-xl text-xs font-medium focus:outline-none focus:border-[#512d7c] focus:bg-white transition"
                   />
@@ -602,17 +620,94 @@ export default function AdminCertificateGeneratorPage() {
                   />
                 </div>
 
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-[#512d7c] mb-2 flex items-center gap-1">
+                      <Award size={12} /> Score (%)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={inputScore}
+                      onChange={(e) => setInputScore(e.target.value)}
+                      className="w-full p-3 bg-[#f8f7fc] border border-[#ebe7f4] rounded-xl text-xs font-medium focus:outline-none focus:border-[#512d7c] focus:bg-white transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-[#512d7c] mb-2 flex items-center gap-1">
+                      <CheckCircle size={12} /> Attendance (%)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={inputAttendance}
+                      onChange={(e) => setInputAttendance(e.target.value)}
+                      className="w-full p-3 bg-[#f8f7fc] border border-[#ebe7f4] rounded-xl text-xs font-medium focus:outline-none focus:border-[#512d7c] focus:bg-white transition"
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#512d7c] mb-2 flex items-center gap-1">
-                    <Award size={12} /> Milestone Scoreboard Average (%)
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#512d7c] mb-2">
+                    Weekly Attendance Breakdown Schedule
                   </label>
                   <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="100"
-                    value={inputScore}
-                    onChange={(e) => setInputScore(e.target.value)}
+                    type="text"
+                    value={inputWeeklyBreakdown}
+                    onChange={(e) => setInputWeeklyBreakdown(e.target.value)}
+                    placeholder="e.g. Week 1: 5/5 | Week 2: 4/5..."
+                    className="w-full p-3 bg-[#f8f7fc] border border-[#ebe7f4] rounded-xl text-xs font-medium focus:outline-none focus:border-[#512d7c] focus:bg-white transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#512d7c] mb-2 flex items-center gap-1">
+                    <MessageSquare size={12} /> Discipline & Punctuality Review
+                  </label>
+                  <textarea
+                    value={inputDiscipline}
+                    onChange={(e) => setInputDiscipline(e.target.value)}
+                    rows={2}
+                    style={{ resize: "none" }}
+                    className="w-full p-3 bg-[#f8f7fc] border border-[#ebe7f4] rounded-xl text-xs font-medium focus:outline-none focus:border-[#512d7c] focus:bg-white transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#512d7c] mb-2 flex items-center gap-1">
+                    <MessageSquare size={12} /> Teamwork & Collaboration Review
+                  </label>
+                  <textarea
+                    value={inputTeamwork}
+                    onChange={(e) => setInputTeamwork(e.target.value)}
+                    rows={2}
+                    style={{ resize: "none" }}
+                    className="w-full p-3 bg-[#f8f7fc] border border-[#ebe7f4] rounded-xl text-xs font-medium focus:outline-none focus:border-[#512d7c] focus:bg-white transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#512d7c] mb-2 flex items-center gap-1">
+                    <MessageSquare size={12} /> Host / Instructor Engagement Comment
+                  </label>
+                  <textarea
+                    value={inputHost}
+                    onChange={(e) => setInputHost(e.target.value)}
+                    rows={2}
+                    style={{ resize: "none" }}
+                    className="w-full p-3 bg-[#f8f7fc] border border-[#ebe7f4] rounded-xl text-xs font-medium focus:outline-none focus:border-[#512d7c] focus:bg-white transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#512d7c] mb-2 flex items-center gap-1">
+                    <MessageSquare size={12} /> CEO / Founder Recommendation
+                  </label>
+                  <textarea
+                    value={inputCeo}
+                    onChange={(e) => setInputCeo(e.target.value)}
+                    rows={2}
+                    style={{ resize: "none" }}
                     className="w-full p-3 bg-[#f8f7fc] border border-[#ebe7f4] rounded-xl text-xs font-medium focus:outline-none focus:border-[#512d7c] focus:bg-white transition"
                   />
                 </div>
@@ -644,7 +739,6 @@ export default function AdminCertificateGeneratorPage() {
                 </div>
               </div>
 
-              {/* CONTROLLERS TRIGGER BUTTONS ROW */}
               <div className="grid grid-cols-2 gap-3 pt-4 border-t border-[#ebe7f4]">
                 <button
                   onClick={generateTrackingCode}
@@ -674,7 +768,6 @@ export default function AdminCertificateGeneratorPage() {
               </div>
             </div>
 
-            {/* LIVE PREVIEW MODULE WITH FIXED HORIZONTAL SCROLL CANVAS */}
             <div className="xl:col-span-8 space-y-4">
               <h2 className="text-xs font-black uppercase tracking-wider text-[#512d7c] text-left">
                 Live Landscape Print Preview (1414 x 1000 Ratio)
@@ -682,16 +775,13 @@ export default function AdminCertificateGeneratorPage() {
               
               <div className="w-full overflow-x-auto border border-[#ebe7f4] rounded-3xl bg-[#f8f7fc] p-6 shadow-inner custom-scrollbar">
                 
-                {/* CERTIFICATE VECTOR GRID CANVAS Container uses exact style configurations */}
                 <div id="targetCertCanvas" className="cert-canvas-frame shadow-md">
                   
-                  {/* Corner Accent Strips */}
                   <div className="cert-edge-accent">
                     <div className="accent-block-1"></div>
                     <div className="accent-block-2"></div>
                   </div>
 
-                  {/* Top Brand Block Header */}
                   <div className="cert-header">
                     <div className="brand-logo-block">
                       {!logoError ? (
@@ -713,7 +803,6 @@ export default function AdminCertificateGeneratorPage() {
                     </div>
                   </div>
 
-                  {/* Core Content Layout Panel */}
                   <div className="cert-body">
                     <h1 className="cert-main-title">Certificate of Completion</h1>
                     <div className="divider-line"></div>
@@ -730,7 +819,6 @@ export default function AdminCertificateGeneratorPage() {
                     <p className="course-summary-text">{inputScope}</p>
                   </div>
 
-                  {/* Decorative Ribbon layer */}
                   <div className="ribbon-wrapper">
                     <div className="ribbon-body">
                       <div className="ribbon-star">★</div>
@@ -738,7 +826,6 @@ export default function AdminCertificateGeneratorPage() {
                     </div>
                   </div>
 
-                  {/* Lower Row Signatures & Office Stamps */}
                   <div className="cert-footer">
                     <div className="sign-block">
                       <div className="sign-line">
