@@ -1,50 +1,67 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-// Initialize Supabase with private server-side environment variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-// Use Service Role Key for secure admin bypass
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+// Initialize Supabase with the Service Role Key to bypass Row-Level Security (RLS) on backend admin actions
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const body = await request.json();
-    // Destructure the new averageScore from the request body
-    const { id, fullName, trackName, courseScope, completionDate, averageScore } = body;
+    const body = await req.json();
 
+    const {
+      id,
+      fullName,
+      trackName,
+      courseScope,
+      completionDate,
+      averageScore,
+      attendanceRate,
+      weeklyBreakdown,
+      disciplineComment,
+      teamworkComment,
+      hostComment,
+      ceoComment,
+      verificationStatus
+    } = body;
+
+    // Validate required fields matching exact frontend payload
     if (!id || !fullName || !trackName) {
       return NextResponse.json(
-        { error: "Validation Fault: Missing required fields." },
+        { error: "Missing required identifier, name, or track name parameters." },
         { status: 400 }
       );
     }
 
-    // Insert directly into the secure public.admin_ledgers table
-    const { error } = await supabase
-      .from("admin_ledgers")
-      .insert([
-        {
-          id: id,
-          full_name: fullName,
-          track_name: trackName,
-          course_scope: courseScope,
-          completion_date: completionDate,
-          verification_status: "verified",
-          // Convert string score to numeric for database compatibility
-          average_score: Number(averageScore || 85.00),
-        },
-      ]);
+    // Insert directly into the admin_ledgers table mapping camelCase to your exact snake_case DB columns
+    const { error } = await supabaseAdmin.from("admin_ledgers").insert([
+      {
+        id: id,
+        full_name: fullName,
+        track_name: trackName,
+        course_scope: courseScope,
+        completion_date: completionDate,
+        average_score: averageScore ? parseFloat(averageScore) : null,
+        attendance_rate: attendanceRate ? parseFloat(attendanceRate) : null,
+        weekly_breakdown: weeklyBreakdown,
+        discipline_comment: disciplineComment,
+        teamwork_comment: teamworkComment,
+        host_comment: hostComment,
+        ceo_comment: ceoComment,
+        verification_status: verificationStatus || "verified",
+      },
+    ]);
 
     if (error) {
-      console.error("Supabase error:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("Supabase Insertion Error:", error.message);
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, message: "Record deployed successfully!" });
   } catch (err: any) {
-    console.error("API route crash:", err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("Server API Exception:", err);
+    return NextResponse.json({ error: err.message || "Internal server error" }, { status: 500 });
   }
 }
