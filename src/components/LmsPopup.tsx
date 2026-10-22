@@ -2,77 +2,67 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePathname } from 'next/navigation'; // 🔥 Next.js safe router path hooks
+import { usePathname } from 'next/navigation';
 
 interface NotificationItem {
   id: string;
   icon: string;
+  badge: string;
   title: string;
   text: string;
   actionText: string;
   link: string;
 }
 
-// 📋 Specialized 3-Tier Notification Matrix for Unpaid/Free LMS Users
+// 📋 High-Engagement Youth & Tech Student Notification Pool
 const lmsNotificationPool: NotificationItem[] = [
   {
     id: "prep-course-bundle",
-    icon: "🚀",
+    icon: "⚡",
+    badge: "Special Deal",
     title: "DGG Prep Program",
-    text: "Unlock the 8 Foundational Tech Courses for ₦75,000 flat! Gain lifetime entry into premium techie chambers.",
+    text: "Access 8 Foundational Tech Tracks for ₦75,000 flat! Gain lifetime entry into high-growth dev circles.",
     actionText: "Secure Access",
     link: "https://learning.dglobalgrowthfield.com/signup"
   },
   {
     id: "corporate-workforce-teams",
     icon: "💼",
+    badge: "Enterprise",
     title: "Train Your Brand Staff",
-    text: "Upskill your business team in modern software engineering and automated workflows. Email us for custom workspaces.",
-    actionText: "Email Mandate",
+    text: "Upskill your corporate team in modern software engineering and automated digital pipelines.",
+    actionText: "Request Brief",
     link: "https://dglobalgrowthfield.com/corporatetraining"
   },
   {
     id: "advanced-tech-mastery",
-    icon: "🎓",
-    title: "Learn Advanced Skills",
-    text: "Accelerate your market optimization engineering value. Register today to access our elite technical labs.",
-    actionText: "Join Matrix",
+    icon: "🚀",
+    badge: "In-Demand",
+    title: "Live Production Labs",
+    text: "Master modern full-stack workflows and remote client algorithms with senior mentor guidance.",
+    actionText: "Join Cohort",
     link: "https://learning.dglobalgrowthfield.com/signup"
   }
 ];
 
-const positionStyles = {
-  "bottom-right": "bottom-6 right-6",
-  "bottom-left": "bottom-6 left-6",
-  "top-right": "top-28 right-6"
-};
-
-const animationVariants = {
-  "bottom-right": { initial: { opacity: 0, y: 60, scale: 0.9 }, animate: { opacity: 1, y: 0, scale: 1 }, exit: { opacity: 0, y: 30, scale: 0.9 } },
-  "bottom-left": { initial: { opacity: 0, y: 60, scale: 0.9 }, animate: { opacity: 1, y: 0, scale: 1 }, exit: { opacity: 0, y: 30, scale: 0.9 } },
-  "top-right": { initial: { opacity: 0, y: -60, scale: 0.9 }, animate: { opacity: 1, y: 0, scale: 1 }, exit: { opacity: 0, y: -20, scale: 0.9 } }
-};
-
 interface LmsPopupProps {
-  isFreeUser: boolean; // Managed by layout parameters
+  isFreeUser?: boolean;
 }
 
-export default function LmsPopup({ isFreeUser }: LmsPopupProps) {
+export default function LmsPopup({ isFreeUser = true }: LmsPopupProps) {
   const pathname = usePathname();
   const [hasMounted, setHasMounted] = useState(false);
   const [activeNotify, setActiveNotify] = useState<NotificationItem | null>(null);
-  const [currentPosition, setCurrentPosition] = useState<keyof typeof positionStyles>("bottom-right");
   const [isVisible, setIsVisible] = useState(false);
   const poolIndexRef = useRef(0);
   const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 🚫 BLOCK CONDITION: Guards and silences layout engine loops inside dashboard routes
+  // Guards against running inside internal student or admin portals
   const isInsideDashboard = 
     pathname.startsWith('/dashboard') || 
     pathname.startsWith('/classroom') ||
     pathname.startsWith('/admin');
 
-  // Next.js hydration safety mount lock
   useEffect(() => {
     setHasMounted(true);
   }, []);
@@ -89,36 +79,32 @@ export default function LmsPopup({ isFreeUser }: LmsPopupProps) {
       const currentMessage = lmsNotificationPool[poolIndexRef.current];
       poolIndexRef.current = (poolIndexRef.current + 1) % lmsNotificationPool.length;
 
-      const directions = Object.keys(positionStyles) as Array<keyof typeof positionStyles>;
-      const randomDirection = directions[Math.floor(Math.random() * directions.length)];
-
       setActiveNotify(currentMessage);
-      setCurrentPosition(randomDirection);
       setIsVisible(true);
 
       if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
       hideTimerRef.current = setTimeout(() => {
         setIsVisible(false);
-      }, 8500); // Popup dismisses itself after 8.5 seconds on-screen
+      }, 7500); // Visible for 7.5 seconds
     }, 300);
   };
 
   useEffect(() => {
     if (!hasMounted || !isFreeUser || isInsideDashboard) return;
 
-    // 🔥 SPEED ALIGNMENT 1: First slide launches onto client screen after exactly 4 seconds
-    const initialDelayTimer = setTimeout(() => {
+    // Initial trigger after 4 seconds
+    const initialDelay = setTimeout(() => {
       triggerNextPopup();
     }, 4000);
 
-    // 🔥 SPEED ALIGNMENT 2: Global interval loop runs exact 45-second rotations
-    const globalIntervalLoop = setInterval(() => {
+    // Heartbeat every 40 seconds
+    const interval = setInterval(() => {
       triggerNextPopup();
-    }, 45000);
+    }, 40000);
 
     return () => {
-      clearTimeout(initialDelayTimer);
-      clearInterval(globalIntervalLoop);
+      clearTimeout(initialDelay);
+      clearInterval(interval);
       if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     };
   }, [pathname, isFreeUser, isInsideDashboard, hasMounted]);
@@ -129,44 +115,60 @@ export default function LmsPopup({ isFreeUser }: LmsPopupProps) {
     <AnimatePresence>
       {isVisible && activeNotify && (
         <motion.div
-          initial={animationVariants[currentPosition].initial}
-          animate={animationVariants[currentPosition].animate}
-          exit={animationVariants[currentPosition].exit}
-          transition={{ type: "spring", stiffness: 110, damping: 16 }}
-          className={`fixed ${positionStyles[currentPosition]} z-[9999] w-[310px] sm:w-[340px] p-[1.5px] shadow-2xl rounded-2xl bg-gradient-to-r from-[#512d7c] to-[#f2b42c]`}
+          initial={{ opacity: 0, x: 80, scale: 0.95 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          exit={{ opacity: 0, x: 80, scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 140, damping: 18 }}
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9985] w-[calc(100vw-2rem)] sm:w-[320px] pointer-events-auto"
         >
-          <div className="bg-white rounded-[14px] p-4 flex items-center gap-4">
-            
-            <div className="text-2xl select-none">{activeNotify.icon}</div>
-            
-            <div className="flex-grow text-left">
-              <h4 className="text-xs font-black text-[#512d7c] uppercase tracking-tighter">
-                {activeNotify.title}
-              </h4>
-              <p className="text-[10px] text-gray-500 font-medium leading-normal mt-0.5">
-                {activeNotify.text}
-              </p>
-            </div>
+          <div className="bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-2xl border border-purple-100/90 text-left relative overflow-hidden flex flex-col">
+            {/* Top accent line */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#512d7c] via-[#f2b42c] to-[#512d7c]" />
 
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <a 
-                href={activeNotify.link} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                onClick={() => setIsVisible(false)}
-                className="bg-[#512d7c] text-white text-[10px] font-bold px-3 py-2 rounded-lg hover:bg-[#f2b42c] hover:text-[#512d7c] transition-colors whitespace-nowrap decoration-transparent inline-block text-center cursor-pointer border-0"
-              >
-                {activeNotify.actionText} ↗
-              </a>
+            {/* Header: Icon, Badge, Title & Close */}
+            <div className="flex items-center justify-between gap-2 mb-1.5 pt-0.5">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-base leading-none shrink-0 p-1 bg-purple-50 rounded-lg">
+                  {activeNotify.icon}
+                </span>
+                <div className="flex items-center gap-1.5 truncate">
+                  <h4 className="text-xs font-black uppercase tracking-tight text-[#512d7c] truncate">
+                    {activeNotify.title}
+                  </h4>
+                  <span className="text-[8px] font-black uppercase tracking-wider bg-[#f2b42c]/20 text-[#512d7c] px-1.5 py-0.5 rounded-full shrink-0">
+                    {activeNotify.badge}
+                  </span>
+                </div>
+              </div>
 
-              <button 
+              <button
+                type="button"
                 onClick={() => setIsVisible(false)}
-                className="text-gray-400 hover:text-red-500 text-xs ml-1 p-1 focus:outline-none cursor-pointer border-0 bg-transparent"
+                className="w-5 h-5 rounded-full bg-slate-100 text-slate-400 hover:text-slate-700 text-xs flex items-center justify-center border-0 cursor-pointer shrink-0"
+                title="Dismiss"
               >
                 ✕
               </button>
             </div>
 
+            {/* Landscape Body Text */}
+            <p className="text-[11px] text-slate-600 font-medium leading-relaxed mb-3">
+              {activeNotify.text}
+            </p>
+
+            {/* Content-Hugging Action Button */}
+            <div className="flex justify-end pt-0.5">
+              <a
+                href={activeNotify.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setIsVisible(false)}
+                className="w-fit inline-flex items-center gap-1.5 py-1.5 px-3.5 bg-[#512d7c] hover:bg-[#3d225d] text-white text-[10px] font-black uppercase tracking-wider rounded-xl transition-all shadow-sm decoration-transparent cursor-pointer"
+              >
+                <span>{activeNotify.actionText}</span>
+                <span>↗</span>
+              </a>
+            </div>
           </div>
         </motion.div>
       )}

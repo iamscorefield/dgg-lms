@@ -11,6 +11,7 @@ import HowItWorks from '@/components/landing/HowItWorks';
 import Testimonials from '@/components/landing/Testimonials';
 import BatchCountdown from '@/components/landing/BatchCountdown';
 import TutorCTA from '@/components/landing/TutorCTA';
+import ReviewsSocialProofToast from '@/components/ReviewsSocialProofToast';
 
 export default function Home() {
   return (
@@ -29,6 +30,9 @@ export default function Home() {
       <Testimonials />
       <BatchCountdown />
       <TutorCTA />
+
+      {/* 🔥 Live LMS & Tech Training Social Proof Toast */}
+      <ReviewsSocialProofToast />
     </main>
   );
 }
