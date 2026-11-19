@@ -1,374 +1,736 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import Script from "next/script";
-import { createBrowser } from "@/lib/supabase-client";
-import toast from "react-hot-toast";
+import React, { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { createClient } from '@supabase/supabase-js';
 
-interface Course {
-  id: number;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabase =
+  supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
+
+export type TrackKey = 'ALL' | 'FREE' | 'PREP' | 'BUSINESS' | 'ADVANCE_SKILLS';
+
+export interface CourseModuleItem {
+  module_number?: number;
   title: string;
-  description: string;
-  department: string;
-  what_you_learn?: string[];
-  duration?: string;
-  prices: {
-    self_paced: number;
-    batch: number;
-    one_on_one: number;
-  };
+  summary?: string;
+}
+
+export interface CourseItem {
+  id: string;
+  title: string;
+  track: 'FREE' | 'PREP' | 'BUSINESS' | 'ADVANCE_SKILLS';
+  level?: string;
+  short_description: string;
+  full_description?: string;
+  learning_outcomes?: string[];
+  modules?: CourseModuleItem[];
+  featured_order?: number;
+}
+
+const TRACK_TABS: { key: TrackKey; label: string }[] = [
+  { key: 'ALL', label: 'ALL' },
+  { key: 'FREE', label: 'FREE COURSES' },
+  { key: 'PREP', label: 'PREP TRACK' },
+  { key: 'BUSINESS', label: 'BUSINESS' },
+  { key: 'ADVANCE_SKILLS', label: 'ADVANCE SKILLS' },
+];
+
+const REAL_CATALOG_FALLBACK: CourseItem[] = [
+  // FREE COURSES (2 featured in ALL)
+  {
+    id: 'free-workspace-tools',
+    title: 'Everyday Workspace Productivity Tools: Complete Guide to Microsoft Office & Google Apps',
+    track: 'FREE',
+    level: 'Beginner • Free',
+    short_description:
+      'Learn practical document creation, spreadsheets, and cloud collaboration using Microsoft Office and Google Workspace tools for everyday work and business.',
+    full_description:
+      'Built for beginners in Nigeria who want practical digital office skills without getting overwhelmed, covering documents, spreadsheets, presentations, and cloud sharing.',
+    learning_outcomes: [
+      'Understand desktop, web, and cloud productivity tools.',
+      'Create and format clean documents in Google Docs and Microsoft Word.',
+      'Build simple spreadsheets in Google Sheets and Microsoft Excel.',
+      'Organize and share files safely on cloud drives.',
+    ],
+    modules: [
+      {
+        module_number: 1,
+        title: 'Documents & Everyday Writing (Docs & Word)',
+        summary: 'Write, format, align, and export clean documents for daily work.',
+      },
+      {
+        module_number: 2,
+        title: 'Spreadsheets & Simple Tracking (Sheets & Excel)',
+        summary: 'Work with rows, columns, basic formulas, and simple trackers.',
+      },
+      {
+        module_number: 3,
+        title: 'Cloud Storage, Presentations & Smart Sharing',
+        summary: 'Organize Drive folders, set permissions, and collaborate smoothly.',
+      },
+    ],
+    featured_order: 1,
+  },
+  {
+    id: 'free-computer-basics',
+    title: 'Computer Basics for Beginners: Understanding Hardware, Software & Everyday Operations',
+    track: 'FREE',
+    level: 'Beginner • Free',
+    short_description:
+      'Build confidence with computer parts, operating systems, file management, and daily device habits—made simple for first-time learners.',
+    full_description:
+      'Breaks down computing in plain language: hardware components, operating systems, folder organization, and calm everyday troubleshooting.',
+    learning_outcomes: [
+      'Identify core computer hardware components and their roles.',
+      'Distinguish hardware, operating systems, and applications.',
+      'Manage files, folders, and backups cleanly.',
+      'Troubleshoot common everyday device hiccups.',
+    ],
+    modules: [
+      {
+        module_number: 1,
+        title: 'Hardware & How a Computer Works',
+        summary: 'Explore core computer parts, ports, displays, and everyday setups.',
+      },
+      {
+        module_number: 2,
+        title: 'Operating Systems & File Management Mastery',
+        summary: 'Navigate system menus, organize folders, and protect your files.',
+      },
+      {
+        module_number: 3,
+        title: 'Daily Operations & Basic Troubleshooting',
+        summary: 'Build calm daily habits and solve common device issues.',
+      },
+    ],
+    featured_order: 2,
+  },
+
+  // PREP TRACK (2 featured in ALL)
+  {
+    id: 'prep-computer-foundations',
+    title: 'Complete Digital & Computer Foundations: Basics, Keyboard Mastery, Browsers & Office',
+    track: 'PREP',
+    level: 'Beginner • Prep',
+    short_description:
+      'Build all-round computer, keyboard, browser, file, and office productivity basics in one clear foundation made for Nigerian learners.',
+    full_description:
+      'Essential starting point for the Prep package combining device basics, keyboard mastery, file/cloud organization, smart browsing & safety, and documents/spreadsheets.',
+    learning_outcomes: [
+      'Master keyboard positioning, accuracy, and everyday shortcuts.',
+      'Navigate operating systems, files, folders, and cloud backups.',
+      'Use browser features, privacy settings, and online safety habits.',
+      'Create and export clean documents and spreadsheets.',
+    ],
+    modules: [
+      {
+        module_number: 1,
+        title: 'Computer Hardware, OS & Everyday Controls',
+        summary: 'Understand device components, OS controls, and core settings.',
+      },
+      {
+        module_number: 2,
+        title: 'Keyboard Mastery & Speed Habits',
+        summary: 'Build typing accuracy, home-row habits, and fast shortcuts.',
+      },
+      {
+        module_number: 3,
+        title: 'Files, Folders & Cloud Organization',
+        summary: 'Keep files structured, backed up, and easy to retrieve.',
+      },
+      {
+        module_number: 4,
+        title: 'Smart Browsing, Settings & Online Safety',
+        summary: 'Manage tabs, bookmarks, privacy settings, and safe browsing.',
+      },
+      {
+        module_number: 5,
+        title: 'Everyday Documents & Spreadsheets',
+        summary: 'Create clean documents, basic tables, and PDF exports.',
+      },
+    ],
+    featured_order: 3,
+  },
+  {
+    id: 'prep-career-and-study',
+    title: 'Smart Online Learning & Navigating Digital Career Paths in Nigeria',
+    track: 'PREP',
+    level: 'Beginner • Prep',
+    short_description:
+      'Master practical online study routines for Nigerian conditions and explore realistic digital and tech career lanes without hype.',
+    full_description:
+      'Combines realistic study systems for data and power conditions with clear guidance on digital and tech career tracks in Nigeria.',
+    learning_outcomes: [
+      'Build study routines suited to Nigerian data and power realities.',
+      'Plan weekly learning targets and keep structured notes.',
+      'Compare realistic digital and tech roles without hype.',
+      'Choose a practical first skill lane based on strengths and resources.',
+    ],
+    modules: [
+      {
+        module_number: 1,
+        title: 'Studying Smart on Nigerian Data & Power',
+        summary: 'Manage data usage, power gaps, and steady study routines.',
+      },
+      {
+        module_number: 2,
+        title: 'Study Schedules, Notes & Feedback',
+        summary: 'Plan weekly milestones, take clean notes, and act on feedback.',
+      },
+      {
+        module_number: 3,
+        title: 'Understanding Digital & Tech Roles',
+        summary: 'Compare support, operations, design, data, and web/no-code paths.',
+      },
+      {
+        module_number: 4,
+        title: 'Choosing Your First Realistic Lane',
+        summary: 'Match your time, device, budget, and strengths to a starting track.',
+      },
+      {
+        module_number: 5,
+        title: 'Building Momentum & Next Steps',
+        summary: 'Turn consistent practice into readiness for next-level courses.',
+      },
+    ],
+    featured_order: 4,
+  },
+
+  // BUSINESS (2 featured in ALL)
+  {
+    id: 'biz-cac-firs-registration',
+    title: 'Get To Know Legal Registration of Business in Nigeria (CAC, FIRS)',
+    track: 'BUSINESS',
+    level: 'Business Track',
+    short_description:
+      'Master Nigerian business registration categories—Business Names/Enterprises, LTDs, PLCs, and Incorporated Trustees—plus CAC-FIRS TIN integration.',
+    full_description:
+      'Designed for Nigerian entrepreneurs, founders, small business owners, and individuals looking to master these skills as a profession to render them as services to clients.',
+    learning_outcomes: [
+      'Differentiate Business Names, LTDs, PLCs, and Incorporated Trustees.',
+      'Navigate CAC name reservation and pre-incorporation steps.',
+      'Understand transitioning from a Business Name to an LTD.',
+      'Set up TIN and initial tax obligations via CAC-FIRS workflows.',
+    ],
+    modules: [
+      {
+        module_number: 1,
+        title: 'Introduction to Nigerian Regulatory Landscape',
+        summary: 'Explore CAC, FIRS, and core business entity categories.',
+      },
+      {
+        module_number: 2,
+        title: 'Business Name (BN) & Enterprise Mastery',
+        summary: 'Understand sole proprietorships, partnerships, and BN-to-LTD transitions.',
+      },
+      {
+        module_number: 3,
+        title: 'Limited Liability (LTD) & Public Companies (PLC)',
+        summary: 'Review share capital, shareholders, and corporate structures.',
+      },
+      {
+        module_number: 4,
+        title: 'Incorporated Trustees & Special Entities',
+        summary: 'Learn NGO, association, and trustee registration essentials.',
+      },
+      {
+        module_number: 5,
+        title: 'FIRS Tax Integration & Initial Compliance',
+        summary: 'Handle TIN setup, CIT basics, and VAT registration fundamentals.',
+      },
+    ],
+    featured_order: 5,
+  },
+  {
+    id: 'biz-advanced-entity-setup',
+    title: 'Advanced Business Registration & Corporate Entity Setup Sprints',
+    track: 'BUSINESS',
+    level: 'Business Track',
+    short_description:
+      'Cover feasibility studies, Business Model Canvas (BMC), MEMART drafting, trademark/IP protection, and legal agreements for growing ventures.',
+    full_description:
+      'Helps founders structure their venture for credibility and scale through feasibility validation, BMC design, MEMART clauses, IP/trademarks, and core agreements.',
+    learning_outcomes: [
+      'Conduct market validation, feasibility checks, and BMC mapping.',
+      'Compare liability and tax considerations across entity structures.',
+      'Understand MEMART structure and corporate governance basics.',
+      'Protect brand assets with trademark searches and legal agreements.',
+    ],
+    modules: [
+      {
+        module_number: 1,
+        title: 'Feasibility & Business Model Canvas (BMC)',
+        summary: 'Validate demand, assess risks, and build a clear BMC.',
+      },
+      {
+        module_number: 2,
+        title: 'Sole Proprietorship vs. Limited Liability Strategy',
+        summary: 'Compare personal vs. corporate liability and funding readiness.',
+      },
+      {
+        module_number: 3,
+        title: 'MEMART & Corporate Governance Drafting',
+        summary: 'Understand MEMART clauses, objects, and governance rules.',
+      },
+      {
+        module_number: 4,
+        title: 'Trademark & Intellectual Property (IP) Protection',
+        summary: 'Run trademark checks and protect brand assets in Nigeria.',
+      },
+      {
+        module_number: 5,
+        title: 'Shareholder Agreements & Legal Document Vault',
+        summary: 'Organize founder agreements, NDAs, and core business contracts.',
+      },
+    ],
+    featured_order: 6,
+  },
+
+  // ADVANCE SKILLS / MAIN COURSE (2 featured in ALL)
+  {
+    id: 'adv-full-stack-systems',
+    title: 'Full-Stack Web & Cloud Systems Engineering',
+    track: 'ADVANCE_SKILLS',
+    level: 'Advance Skills',
+    short_description:
+      'Architect, build, and deploy modern web applications, relational databases, and APIs with production-grade workflows.',
+    full_description:
+      'Hands-on engineering track focused on building reliable web platforms, database schemas, authentication, and real-world deployment pipelines.',
+    learning_outcomes: [
+      'Design relational schemas and APIs for real applications.',
+      'Build responsive interfaces with clean state and data flow.',
+      'Implement authentication, validation, and error handling.',
+      'Deploy and monitor production web applications.',
+    ],
+    modules: [
+      {
+        module_number: 1,
+        title: 'Modern Web Architecture & TypeScript Foundations',
+        summary: 'Structure scalable frontend and backend codebases.',
+      },
+      {
+        module_number: 2,
+        title: 'Relational Databases & API Design',
+        summary: 'Model data cleanly and expose reliable endpoints.',
+      },
+      {
+        module_number: 3,
+        title: 'Authentication, Security & Data Integrity',
+        summary: 'Protect routes, sessions, and database records.',
+      },
+      {
+        module_number: 4,
+        title: 'Production Deployment & Performance',
+        summary: 'Ship, test, and maintain live applications.',
+      },
+    ],
+    featured_order: 7,
+  },
+  {
+    id: 'adv-data-automation-ops',
+    title: 'Applied Data Analytics, Reporting & Workflow Automation',
+    track: 'ADVANCE_SKILLS',
+    level: 'Advance Skills',
+    short_description:
+      'Turn raw operational data into clear dashboards, automated workflows, and actionable decision reports for modern organizations.',
+    full_description:
+      'Practical skills track for turning spreadsheets, databases, and operational logs into structured metrics and automated reporting systems.',
+    learning_outcomes: [
+      'Clean, structure, and audit raw operational datasets.',
+      'Build clear KPI trackers and decision summaries.',
+      'Automate repetitive reporting and data pipelines.',
+      'Present insights clearly to stakeholders and leadership.',
+    ],
+    modules: [
+      {
+        module_number: 1,
+        title: 'Data Cleaning & Structured Reporting',
+        summary: 'Standardize messy records into reliable tables.',
+      },
+      {
+        module_number: 2,
+        title: 'Metrics, Dashboards & Decision Frameworks',
+        summary: 'Track key metrics and build clear visual summaries.',
+      },
+      {
+        module_number: 3,
+        title: 'Workflow & Reporting Automation',
+        summary: 'Reduce manual repetitive steps with repeatable workflows.',
+      },
+      {
+        module_number: 4,
+        title: 'Capstone Operational Analytics Project',
+        summary: 'Deliver a complete end-to-end reporting solution.',
+      },
+    ],
+    featured_order: 8,
+  },
+];
+
+function normalizeTrack(rawTrack?: string, rawCategory?: string): CourseItem['track'] {
+  const value = `${rawTrack || ''} ${rawCategory || ''}`.toUpperCase();
+  if (value.includes('FREE')) return 'FREE';
+  if (value.includes('PREP')) return 'PREP';
+  if (value.includes('BIZ') || value.includes('BUSINESS')) return 'BUSINESS';
+  return 'ADVANCE_SKILLS';
+}
+
+function getTrackLabel(track: CourseItem['track']): string {
+  switch (track) {
+    case 'FREE':
+      return 'FREE COURSES';
+    case 'PREP':
+      return 'PREP TRACK';
+    case 'BUSINESS':
+      return 'BUSINESS';
+    case 'ADVANCE_SKILLS':
+      return 'ADVANCE SKILLS';
+  }
+}
+
+function getEnrollmentConfig(track: CourseItem['track']): {
+  badge: string;
+  notice: string;
+  buttonText: string;
+  href: string;
+} {
+  switch (track) {
+    case 'FREE':
+      return {
+        badge: 'FREE ACCESS',
+        notice: 'This course is part of our free learning resources on DGG Academy.',
+        buttonText: 'SIGN UP TO LEARN FOR FREE →',
+        href: '/signup?track=free',
+      };
+    case 'PREP':
+      return {
+        badge: 'ONE-TIME PACKAGE PAYMENT',
+        notice:
+          'Sign up and with a one-time payment you get access to all courses under this Prep track/package.',
+        buttonText: 'SIGN UP FOR PREP PACKAGE →',
+        href: '/signup?track=prep',
+      };
+    case 'BUSINESS':
+      return {
+        badge: 'ONE-TIME PACKAGE PAYMENT',
+        notice:
+          'Sign up and with a one-time payment you get access to all courses under this Business track/package.',
+        buttonText: 'SIGN UP FOR BUSINESS PACKAGE →',
+        href: '/signup?track=business',
+      };
+    case 'ADVANCE_SKILLS':
+      return {
+        badge: 'MAIN COURSE ENROLLMENT',
+        notice: 'Create your account to enroll in this Advance Skills course and start learning.',
+        buttonText: 'SIGN UP TO ENROLL →',
+        href: '/signup?track=advance-skills',
+      };
+  }
 }
 
 export default function CourseGrid() {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [activeTab, setActiveTab] = useState<string>("All");
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-  const [selectedType, setSelectedType] = useState<
-    "self_paced" | "batch" | "one_on_one" | null
-  >(null);
+  const [activeTab, setActiveTab] = useState<TrackKey>('ALL');
+  const [courses, setCourses] = useState<CourseItem[]>(REAL_CATALOG_FALLBACK);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [selectedCourse, setSelectedCourse] = useState<CourseItem | null>(null);
 
   useEffect(() => {
-    async function fetchCourses() {
-      const supabase = createBrowser();
-      const { data } = await supabase
-        .from("courses")
-        .select("*")
-        .order("title");
-      setCourses(data || []);
+    let isMounted = true;
+
+    async function loadCoursesFromSupabase() {
+      if (!supabase) {
+        if (isMounted) setLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('courses')
+          .select('*')
+          .order('created_at', { ascending: true });
+
+        if (error || !data || data.length === 0) {
+          if (isMounted) {
+            setCourses(REAL_CATALOG_FALLBACK);
+            setLoading(false);
+          }
+          return;
+        }
+
+        const mapped: CourseItem[] = data.map((row: Record<string, unknown>, idx: number) => {
+          const normalizedTrack = normalizeTrack(
+            String(row.track ?? row.course_type ?? row.tier ?? ''),
+            String(row.category ?? '')
+          );
+
+          const parsedOutcomes = Array.isArray(row.learning_outcomes)
+            ? (row.learning_outcomes as string[])
+            : [];
+
+          const parsedModules = Array.isArray(row.modules)
+            ? (row.modules as CourseModuleItem[])
+            : [];
+
+          return {
+            id: String(row.id ?? `course-${idx}`),
+            title: String(row.title ?? 'Untitled Course'),
+            track: normalizedTrack,
+            level: row.level ? String(row.level) : getTrackLabel(normalizedTrack),
+            short_description: String(
+              row.short_description ?? row.description ?? 'Structured practical course on DGG Academy.'
+            ),
+            full_description: row.full_description
+              ? String(row.full_description)
+              : String(row.short_description ?? row.description ?? ''),
+            learning_outcomes: parsedOutcomes,
+            modules: parsedModules,
+            featured_order: typeof row.featured_order === 'number' ? row.featured_order : idx + 1,
+          };
+        });
+
+        if (isMounted) {
+          setCourses(mapped);
+          setLoading(false);
+        }
+      } catch {
+        if (isMounted) {
+          setCourses(REAL_CATALOG_FALLBACK);
+          setLoading(false);
+        }
+      }
     }
-    fetchCourses();
+
+    loadCoursesFromSupabase();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const handleEnroll = async (
-    course: Course,
-    type: "self_paced" | "batch" | "one_on_one"
-  ) => {
-    const supabase = createBrowser();
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session) {
-      toast.error("Login first to enroll");
-      return;
+  const visibleCourses = useMemo(() => {
+    if (activeTab === 'ALL') {
+      const roles: CourseItem['track'][] = ['FREE', 'PREP', 'BUSINESS', 'ADVANCE_SKILLS'];
+      const picked: CourseItem[] = [];
+      for (const role of roles) {
+        const matching = courses.filter((c) => c.track === role).slice(0, 2);
+        picked.push(...matching);
+      }
+      return picked.length > 0 ? picked : REAL_CATALOG_FALLBACK.slice(0, 8);
     }
 
-    const price = course.prices[type];
+    return courses.filter((c) => c.track === activeTab);
+  }, [activeTab, courses]);
 
-    if (price === 0) {
-      await supabase.from("enrollments").insert({
-        student_id: session.user.id,
-        course_id: course.id,
-        payment_status: "paid",
-        metadata: { training_type: type },
-      });
-      toast.success(`Enrolled in ${type.replace("_", " ")} version!`);
-      setSelectedCourse(null);
-      setSelectedType(null);
-      return;
-    }
-
-    if (typeof window === "undefined" || !(window as any).PaystackPop) {
-      toast.error("Payment gateway terminal is initializing. Please try again in a moment.");
-      return;
-    }
-
-    const handler = (window as any).PaystackPop.setup({
-      key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
-      email: session.user.email,
-      amount: price * 100,
-      currency: "NGN",
-      reference: new Date().getTime().toString(),
-      metadata: {
-        user_id: session.user.id,
-        course_id: course.id,
-        training_type: type,
-      },
-      callback: () => {
-        toast.success(
-          `Payment successful! ${type.replace("_", " ")} access unlocked.`
-        );
-        setSelectedCourse(null);
-        setSelectedType(null);
-      },
-      onClose: () => toast.error("Payment cancelled"),
-    });
-    handler.openIframe();
-  };
-
-  const filteredCourses = courses.filter((course) => {
-    if (activeTab === "All") return true;
-    return (course.department || "").toLowerCase() === activeTab.toLowerCase();
-  });
+  const selectedEnrollment = selectedCourse ? getEnrollmentConfig(selectedCourse.track) : null;
 
   return (
-    <section id="courses" className="pt-4 pb-24 bg-slate-50 relative overflow-hidden mt-0 border-t-0 font-sans">
-      <Script src="https://js.paystack.co/v1/inline.js" strategy="lazyOnload" />
-
-      {/* Modern Background Accents */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-[#512d7c]/5 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-[350px] h-[350px] bg-[#f2b42c]/5 rounded-full blur-[110px] pointer-events-none" />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 relative z-10">
-        
-        {/* Header Title Typography Component */}
-        <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
-          <span className="inline-block px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase bg-[#512d7c]/5 text-[#512d7c] border border-[#512d7c]/10 mb-4">
-            Educational Ecosystem
+    <section className="w-full bg-white py-16 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center max-w-3xl mx-auto">
+          <span className="inline-block rounded-full bg-[#512d7c]/10 px-4 py-1 text-xs font-semibold tracking-wider uppercase text-[#512d7c]">
+            EDUCATIONAL ECOSYSTEM
           </span>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#512d7c] tracking-tight leading-none mb-4 uppercase">
-            Explore Our Available Courses
+          <h2 className="mt-4 text-3xl sm:text-5xl font-extrabold tracking-tight text-[#3b1d63] uppercase">
+            EXPLORE OUR AVAILABLE COURSES
           </h2>
-          <p className="text-sm text-slate-400 font-medium leading-relaxed">
-            Select an advanced production track backed by live sandboxes, custom dataset portfolios, and multi-tier structural instruction frameworks.
+          <p className="mt-3 text-sm sm:text-base text-slate-600">
+            Real curriculum tracks across Free Courses, Prep Track, Business, and Advance Skills—built
+            for practical execution and steady growth.
           </p>
         </div>
 
-        {/* Tab Filter Links Bar */}
-        <div className="flex justify-center gap-1.5 mb-12 sm:mb-16 max-w-sm sm:max-w-md mx-auto bg-slate-200/60 backdrop-blur-md p-1 sm:p-1.5 rounded-xl sm:rounded-2xl select-none border border-slate-200/40">
-          {["All", "Tech", "Design", "Business"].map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => {
-                setActiveTab(tab);
-                setSelectedCourse(null);
-              }}
-              className={`flex-1 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all duration-300 border-0 cursor-pointer ${
-                activeTab === tab
-                  ? "bg-[#512d7c] text-white shadow-md"
-                  : "text-slate-500 hover:text-slate-900 bg-transparent"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-2 bg-slate-100/90 p-1.5 rounded-full w-fit mx-auto border border-slate-200/70">
+          {TRACK_TABS.map((tab) => {
+            const isActive = activeTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setActiveTab(tab.key)}
+                className={`px-4 py-2 rounded-full text-xs font-bold tracking-wider uppercase transition cursor-pointer ${
+                  isActive
+                    ? 'bg-[#512d7c] text-white shadow-sm'
+                    : 'text-slate-600 hover:text-[#512d7c]'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
-        {/* 🚀 COURSE GRID CARDS TRACK VIEWPORTS (MOBILE FRIENDLY CONSTRAINTS) */}
-        {filteredCourses.length === 0 ? (
-          <div className="text-center py-20 bg-white border border-slate-200 rounded-[2.5rem] max-w-md mx-auto shadow-xs">
-            <span className="text-5xl block mb-3">📁</span>
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">No active modules synced.</p>
+        {loading ? (
+          <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div
+                key={index}
+                className="h-60 rounded-2xl border border-slate-200 bg-slate-50 animate-pulse p-6"
+              />
+            ))}
+          </div>
+        ) : visibleCourses.length === 0 ? (
+          <div className="mt-10 rounded-2xl border border-slate-200 bg-slate-50 p-10 text-center">
+            <p className="text-base font-semibold text-[#512d7c]">
+              No courses published under {getTrackLabel(activeTab as CourseItem['track'])} yet.
+            </p>
+            <p className="mt-1 text-sm text-slate-600">
+              Switch tabs or add courses in your Admin portal to display them here.
+            </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-stretch max-w-6xl mx-auto w-full">
-            {filteredCourses.map((course) => (
-              <div
+          <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {visibleCourses.map((course) => (
+              <article
                 key={course.id}
-                onClick={() => {
-                  setSelectedCourse(course);
-                  setSelectedType(null);
-                }}
-                className="w-full max-w-sm sm:max-w-none mx-auto bg-white border border-slate-200/80 p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] shadow-2xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between text-left group cursor-pointer relative"
+                className="flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm hover:border-[#512d7c]/40 hover:shadow-md transition"
               >
                 <div>
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-slate-50 border border-slate-100 text-slate-800 flex items-center justify-center text-xl sm:text-2xl mb-5 sm:mb-6 group-hover:bg-[#512d7c] group-hover:text-white group-hover:border-transparent transition-all duration-300 shadow-inner select-none">
-                    {course.department?.toLowerCase() === "tech" ? "💻" : 
-                     course.department?.toLowerCase() === "business" ? "📈" : 
-                     course.department?.toLowerCase() === "design" ? "🎨" : "📚"}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center rounded-md bg-[#512d7c]/10 px-2.5 py-1 text-[11px] font-bold tracking-wider uppercase text-[#512d7c]">
+                      {getTrackLabel(course.track)}
+                    </span>
+                    {course.level && (
+                      <span className="text-xs font-medium text-slate-500">{course.level}</span>
+                    )}
                   </div>
 
-                  <span className="text-[9px] font-black tracking-widest text-[#512d7c] bg-[#512d7c]/5 px-2.5 py-1 rounded-md border border-[#512d7c]/10 uppercase inline-block mb-3">
-                    {course.department || "General"} Discipline
-                  </span>
-                  
-                  <h3 className="text-lg sm:text-xl font-black text-[#512d7c] leading-tight mb-2 sm:mb-3 tracking-wide uppercase">
+                  <h3 className="mt-4 text-lg font-extrabold leading-snug text-[#2f1652] uppercase">
                     {course.title}
                   </h3>
-                  
-                  <p className="text-xs sm:text-sm text-slate-400 font-bold leading-relaxed mb-6 sm:mb-8 line-clamp-3">
-                    {course.description}
+
+                  <p className="mt-2.5 text-sm leading-relaxed text-slate-600 line-clamp-3">
+                    {course.short_description}
                   </p>
                 </div>
 
-                <div className="pt-4 border-t border-slate-100/80 mt-auto">
-                  <button 
-                    type="button" 
-                    className="w-full py-3 sm:py-4 bg-slate-50 group-hover:bg-[#512d7c] text-slate-700 group-hover:text-white font-black text-xs uppercase tracking-widest rounded-xl transition-colors duration-300 border-0 cursor-pointer"
+                <div className="mt-6 pt-4 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCourse(course)}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 hover:bg-[#512d7c] hover:text-white hover:border-[#512d7c] text-[#2f1652] font-bold text-xs tracking-wider uppercase py-3 px-4 transition cursor-pointer"
                   >
-                    View Details &amp; Enroll
+                    VIEW CURRICULUM DETAILS →
                   </button>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         )}
 
-        {/* INTERMEDIATE BLOCK: CATALOG DYNAMIC BLUEPRINT EXPLANATION */}
-        <div className="mt-14 sm:mt-16 text-center max-w-2xl mx-auto px-4 border-b border-slate-200/60 pb-14">
-          <h4 className="text-sm font-black text-slate-800 tracking-wide uppercase mb-2">
-            💡 Our Active Curriculum is Not Limited to This Grid
-          </h4>
-          <p className="text-xs sm:text-sm text-slate-400 font-bold leading-relaxed mb-5">
-            DGG Academy continuously updates its educational ecosystem with targeted sub-modules, localized growth programs, and specialized sandbox frameworks. Sign up for a free learning account to access our complete real-time training sequence blueprints.
-          </p>
-          <a
-            href="/signup"
-            className="inline-block px-6 py-3 bg-[#512d7c] hover:bg-[#3f2162] text-white font-black text-[11px] uppercase tracking-widest rounded-xl transition-all shadow-xs decoration-none"
-          >
-            Create Account to View All
-          </a>
-        </div>
-
-        {/* 🔥 FIXED HIGH-CONTRAST GRADIENT WORKSPACE CONTAINER (Resolves image_034ff0.png layout washing) */}
-        <div className="mt-16 max-w-4xl mx-auto bg-gradient-to-br from-[#3c1e5e] via-[#24113a] to-[#12061f] rounded-[2rem] sm:rounded-[2.5rem] p-8 sm:p-12 text-center relative overflow-hidden shadow-xl border border-purple-950/40">
-          
-          {/* Internal Luminous Custom Mesh Blend rings */}
-          <div className="absolute right-0 top-0 w-64 h-64 bg-[#f2b42c]/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -left-10 -bottom-10 w-72 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
-          
-          <div className="relative z-10 max-w-2xl mx-auto">
-            <span className="text-[10px] sm:text-xs font-black text-[#f2b42c] uppercase tracking-widest block mb-3">
-              Corporate &amp; Individual Upskilling
-            </span>
-            <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase mb-4 leading-tight">
-              Flexible Training Frameworks for Modern Industry Teams
-            </h3>
-            <p className="text-xs sm:text-sm text-purple-100/90 font-medium leading-relaxed mb-8 text-center px-1 sm:px-4">
-              DGG Academy powers structural corporate transformations by upskilling industry employees through flexible delivery tracks. Our complete curriculum pipeline is systematically deployed via highly integrated hybrid execution, premium remote sandboxes, and immersive physical on-site cohorts designed to match institutional schedules.
-            </p>
-            
-            {/* Direct corporate mail link anchor */}
-            <a
-              href="mailto:contact@dglobalgrowthfield.com?subject=Corporate%20Employee%20Training%20Inquiry"
-              className="inline-block px-8 py-3.5 sm:py-4 bg-[#f2b42c] hover:bg-white text-black hover:text-[#512d7c] font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-md decoration-none border-0 cursor-pointer"
-            >
-              Get Started &amp; Explore More Courses
-            </a>
-          </div>
-        </div>
-
-        {/* 🛸 MODAL DETAIL DISPLAY SCREEN GRID OVERLAY */}
-        {selectedCourse && (
+        {selectedCourse && selectedEnrollment && (
           <div
-            className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center z-[99999] p-4 transition-opacity duration-300 animate-fade-in"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-[1px]"
             onClick={() => setSelectedCourse(null)}
           >
             <div
-              className="bg-white rounded-[2.5rem] max-w-2xl w-full max-h-[85vh] overflow-y-auto p-8 sm:p-10 relative text-left border border-slate-200 shadow-2xl"
+              className="relative max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 sm:p-8 shadow-2xl border border-slate-200"
               onClick={(e) => e.stopPropagation()}
             >
-              <button
-                type="button"
-                className="absolute top-5 right-6 text-3xl text-slate-400 hover:text-red-500 border-0 bg-transparent cursor-pointer font-light transition-colors focus:outline-none"
-                onClick={() => setSelectedCourse(null)}
-              >
-                ✕
-              </button>
-              
-              <div className="mb-6">
-                <span className="inline-block px-3 py-1 bg-[#512d7c]/5 border border-[#512d7c]/10 text-[#512d7c] rounded-md font-bold text-[9px] tracking-widest uppercase mb-2">
-                  {selectedCourse.department || "General"} Curriculum Pipeline
-                </span>
-                <h2 className="text-2xl sm:text-3xl font-black text-[#512d7c] leading-tight tracking-tight uppercase">
-                  {selectedCourse.title}
-                </h2>
-              </div>
-
-              <p className="text-xs sm:text-sm text-slate-400 font-bold leading-relaxed mb-8 border-b border-slate-100 pb-6">
-                {selectedCourse.description}
-              </p>
-
-              <div className="mb-8">
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">
-                  Syllabus Framework Objectives
-                </h3>
-                <ul className="space-y-3.5 pl-0 text-left">
-                  {selectedCourse.what_you_learn && selectedCourse.what_you_learn.length > 0 ? (
-                    selectedCourse.what_you_learn.map((item, i) => (
-                      <li key={i} className="text-xs sm:text-sm flex items-start gap-3 font-bold text-slate-600 leading-relaxed">
-                        <span className="text-amber-500 font-black text-md leading-none">✔</span>
-                        <span>{item}</span>
-                      </li>
-                    ))
-                  ) : (
-                    <li className="text-xs text-slate-400 italic">No syllabus blueprints mapped yet to this dashboard vector.</li>
-                  )}
-                </ul>
-              </div>
-
-              {selectedCourse.duration && (
-                <div className="mb-8 bg-slate-50 border border-slate-200/60 p-4 rounded-xl text-xs font-bold text-slate-700 flex items-center gap-2">
-                  <span>⏳</span>
-                  <div>
-                    <span className="uppercase text-slate-400 font-black tracking-wider text-[10px] mr-1.5">Track Duration:</span> 
-                    {selectedCourse.duration}
+              <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-md bg-[#512d7c] px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-white">
+                      {getTrackLabel(selectedCourse.track)}
+                    </span>
+                    {selectedCourse.level && (
+                      <span className="rounded-md bg-[#f2b42c]/20 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-[#512d7c]">
+                        {selectedCourse.level}
+                      </span>
+                    )}
                   </div>
+                  <h3 className="mt-3 text-xl sm:text-2xl font-extrabold text-[#2f1652]">
+                    {selectedCourse.title}
+                  </h3>
                 </div>
-              )}
 
-              <div className="mb-8 border-t border-slate-100 pt-6">
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 text-center sm:text-left">
-                  Select Training Track Package
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  
-                  {/* Option Card 1: Self Paced */}
-                  <div
-                    onClick={() => setSelectedType("self_paced")}
-                    className={`p-5 border-2 rounded-2xl cursor-pointer text-center transition-all duration-300 flex flex-col justify-between ${
-                      selectedType === "self_paced"
-                        ? "border-[#f2b42c] bg-amber-50/40 shadow-sm scale-[1.02]"
-                        : "border-slate-200/80 bg-white hover:border-[#512d7c]/30"
-                    }`}
-                  >
-                    <div>
-                      <h4 className="text-xs font-black text-[#512d7c] uppercase tracking-wider">Self-Paced</h4>
-                      <p className="text-lg font-black text-amber-600 tracking-tight mt-1">
-                        ₦{selectedCourse.prices?.self_paced?.toLocaleString() || "0"}
-                      </p>
-                    </div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight mt-3 border-t border-slate-100 pt-2">On-Demand Portal</p>
-                  </div>
-
-                  {/* Option Card 2: Batch Sync */}
-                  <div
-                    onClick={() => setSelectedType("batch")}
-                    className={`p-5 border-2 rounded-2xl cursor-pointer text-center transition-all duration-300 flex flex-col justify-between ${
-                      selectedType === "batch"
-                        ? "border-[#f2b42c] bg-amber-50/40 shadow-sm scale-[1.02]"
-                        : "border-slate-200/80 bg-white hover:border-[#512d7c]/30"
-                    }`}
-                  >
-                    <div>
-                      <h4 className="text-xs font-black text-[#512d7c] uppercase tracking-wider">Batch Sync</h4>
-                      <p className="text-lg font-black text-amber-600 tracking-tight mt-1">
-                        ₦{selectedCourse.prices?.batch?.toLocaleString() || "0"}
-                      </p>
-                    </div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight mt-3 border-t border-slate-100 pt-2">Live Group Cohorts</p>
-                  </div>
-
-                  {/* Option Card 3: One-on-One */}
-                  <div
-                    onClick={() => setSelectedType("one_on_one")}
-                    className={`p-5 border-2 rounded-2xl cursor-pointer text-center transition-all duration-300 flex flex-col justify-between ${
-                      selectedType === "one_on_one"
-                        ? "border-[#f2b42c] bg-amber-50/40 shadow-sm scale-[1.02]"
-                        : "border-slate-200/80 bg-white hover:border-[#512d7c]/30"
-                    }`}
-                  >
-                    <div>
-                      <h4 className="text-xs font-black text-[#512d7c] uppercase tracking-wider">Private 1:1</h4>
-                      <p className="text-lg font-black text-amber-600 tracking-tight mt-1">
-                        ₦{selectedCourse.prices?.one_on_one?.toLocaleString() || "0"}
-                      </p>
-                    </div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight mt-3 border-t border-slate-100 pt-2">Dedicated Mentor</p>
-                  </div>
-
-                </div>
-              </div>
-
-              {selectedType && (
                 <button
                   type="button"
-                  onClick={() => handleEnroll(selectedCourse, selectedType)}
-                  className="w-full py-4 bg-[#512d7c] text-white font-black text-xs uppercase tracking-widest rounded-xl shadow-md hover:bg-[#3d225d] transition-all border-0 cursor-pointer transform hover:scale-[1.01]"
+                  onClick={() => setSelectedCourse(null)}
+                  aria-label="Close modal"
+                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
                 >
-                  Confirm Registration Model – ₦{selectedCourse.prices?.[selectedType]?.toLocaleString() || "0"}
+                  ✕
                 </button>
-              )}
+              </div>
+
+              <div className="mt-5 space-y-6">
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#512d7c]">
+                    ABOUT THIS COURSE
+                  </h4>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-700">
+                    {selectedCourse.full_description || selectedCourse.short_description}
+                  </p>
+                </div>
+
+                {selectedCourse.learning_outcomes && selectedCourse.learning_outcomes.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#512d7c]">
+                      WHAT YOU WILL LEARN
+                    </h4>
+                    <ul className="mt-2.5 space-y-2">
+                      {selectedCourse.learning_outcomes.map((item, idx) => (
+                        <li key={idx} className="flex items-start gap-2.5 text-sm text-slate-700">
+                          <span className="mt-0.5 font-bold text-[#f2b42c]">✓</span>
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {selectedCourse.modules && selectedCourse.modules.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#512d7c]">
+                      COURSE SYLLABUS ({selectedCourse.modules.length} MODULES)
+                    </h4>
+                    <div className="mt-2.5 space-y-2">
+                      {selectedCourse.modules.map((mod, idx) => (
+                        <div
+                          key={idx}
+                          className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3"
+                        >
+                          <p className="text-[11px] font-bold uppercase tracking-wider text-[#512d7c]">
+                            MODULE {mod.module_number ?? idx + 1}
+                          </p>
+                          <p className="mt-0.5 text-sm font-bold text-slate-900">{mod.title}</p>
+                          {mod.summary && (
+                            <p className="mt-1 text-xs text-slate-600">{mod.summary}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="rounded-xl border border-[#512d7c]/20 bg-[#512d7c]/[0.04] p-4">
+                  <span className="inline-block rounded bg-[#f2b42c]/25 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-[#512d7c]">
+                    {selectedEnrollment.badge}
+                  </span>
+                  <p className="mt-2 text-sm font-medium text-slate-800">
+                    {selectedEnrollment.notice}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-7 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-slate-100 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCourse(null)}
+                  className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-700 hover:bg-slate-50 cursor-pointer"
+                >
+                  CLOSE
+                </button>
+
+                <Link
+                  href={selectedEnrollment.href}
+                  onClick={() => setSelectedCourse(null)}
+                  className="inline-flex items-center justify-center rounded-xl bg-[#512d7c] hover:bg-[#3f2162] text-white font-bold text-xs tracking-wider uppercase px-5 py-3 shadow-sm transition"
+                >
+                  {selectedEnrollment.buttonText}
+                </Link>
+              </div>
             </div>
           </div>
         )}

@@ -3,7 +3,7 @@ import { createServer } from "@/lib/supabase-server";
 import Sidebar from "@/components/Sidebar";
 
 type ModuleWithCounts = {
-  id: number;
+  id: string | number;
   title: string | null;
   summary: string | null;
   sort_order: number | null;
@@ -30,10 +30,10 @@ export default async function LearningPage(
     notFound();
   }
 
-  // 1) Load user profile to check membership_status
+  // 1) Load user profile with independent package payment flags
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("membership_status")
+    .select("prep_paid, business_paid")
     .eq("id", session.user.id)
     .single();
 
@@ -41,12 +41,10 @@ export default async function LearningPage(
     notFound();
   }
 
-  const isPremium = profile.membership_status === "premium";
-
-  // 2) Load course using *course_type* (NOT type)
+  // 2) Load course (including free flags)
   const { data: course, error: courseError } = await supabase
     .from("courses")
-    .select("id, title, course_type")
+    .select("id, title, course_type, is_free, price")
     .eq("id", id)
     .single();
 
@@ -54,7 +52,7 @@ export default async function LearningPage(
     notFound();
   }
 
-  // 3) Check paid enrollment for main courses (optional fallback)
+  // 3) Check paid enrollment fallback
   const { data: paidEnrollment } = await supabase
     .from("enrollments")
     .select("id, payment_status")
@@ -63,53 +61,84 @@ export default async function LearningPage(
     .eq("payment_status", "paid")
     .maybeSingle();
 
-  const hasPaidAccess = !!paidEnrollment;
+  const hasPaidEnrollment = !!paidEnrollment;
 
-  // 4) Access rules
+  // 4) Access rules & Strict Tier-Based Payment Gating
+  const cType = (course.course_type || "").toLowerCase();
   const isPrecourse =
-    course.course_type === "PreCourse" ||
-    course.course_type === "precourse" ||
-    course.course_type === "prep_course";
+    cType === "precourse" || cType === "prep_course" || cType === "prep";
+  const isBusiness = cType.includes("business");
+  const isFreeCourse =
+    course.is_free === true ||
+    Number(course.price) === 0 ||
+    cType.includes("free") ||
+    cType.includes("resource");
 
-  const hasAccess =
-    isPremium || (!isPrecourse && hasPaidAccess);
+  // Determine access based on free status or specific course tier flags
+  let hasAccess = false;
+  if (isFreeCourse) {
+    hasAccess = true;
+  } else if (isPrecourse) {
+    hasAccess = profile.prep_paid === true || hasPaidEnrollment;
+  } else if (isBusiness) {
+    hasAccess = profile.business_paid === true || hasPaidEnrollment;
+  } else {
+    hasAccess = hasPaidEnrollment;
+  }
 
   if (!hasAccess) {
-    if (isPrecourse) {
-      redirect(`/dashboard/precourse/${id}`);
+    if (isBusiness) {
+      redirect("/dashboard/business?error=payment_required");
+    } else if (isPrecourse) {
+      redirect("/dashboard/precourse");
     } else {
-      redirect(`/dashboard/student/courses/${id}`);
+      redirect(`/dashboard/courses?error=payment_required`);
     }
   }
 
   // 5) Load modules
   const { data: modulesData, error: modulesError } = await supabase
     .from("course_modules")
-    .select(
-      `
-      id,
-      title,
-      summary,
-      sort_order,
-      module_lessons ( id ),
-      module_assessments ( id )
-    `
-    )
-    .eq("course_id", id)
+    .select("id, title, summary, sort_order")
+    .or(`course_id.eq.${id},course_id.eq.${courseId}`)
     .order("sort_order", { ascending: true });
 
   if (modulesError) {
     console.error("Error loading modules:", modulesError);
   }
 
-  const modules: ModuleWithCounts[] = (modulesData || []).map((m: any) => ({
-    id: m.id,
-    title: m.title,
-    summary: m.summary,
-    sort_order: m.sort_order,
-    lessons_count: (m.module_lessons || []).length,
-    assessments_count: (m.module_assessments || []).length,
-  }));
+  // 6) Query lesson_slides and assessment_banks using module position index ("1", "2", etc.)
+  const modules: ModuleWithCounts[] = await Promise.all(
+    (modulesData || []).map(async (m: any, index: number) => {
+      const moduleNumStr = String(index + 1);
+
+      const [slidesRes, assessmentsRes] = await Promise.all([
+        supabase
+          .from("lesson_slides")
+          .select("lesson_number")
+          .eq("course_id", String(id))
+          .eq("module_id", moduleNumStr),
+        supabase
+          .from("assessment_banks")
+          .select("lesson_number")
+          .eq("course_id", String(id))
+          .eq("module_id", moduleNumStr),
+      ]);
+
+      // Count unique lessons by lesson_number
+      const uniqueLessons = new Set((slidesRes.data || []).map((s: any) => s.lesson_number));
+      const uniqueAssessments = new Set((assessmentsRes.data || []).map((a: any) => a.lesson_number));
+
+      return {
+        id: m.id,
+        title: m.title,
+        summary: m.summary,
+        sort_order: m.sort_order,
+        lessons_count: uniqueLessons.size > 0 ? uniqueLessons.size : 4,
+        assessments_count: uniqueAssessments.size > 0 ? uniqueAssessments.size : 4,
+      };
+    })
+  );
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -120,7 +149,7 @@ export default async function LearningPage(
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
             <div>
               <p className="text-xs font-semibold text-[#512d7c] uppercase tracking-wide mb-1">
-                Course
+                Course Workspace
               </p>
               <h1 className="text-lg md:text-xl font-bold text-gray-900">
                 {course.title}

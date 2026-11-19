@@ -29,21 +29,45 @@ export async function POST(req: NextRequest) {
 
   // Only handle successful charges
   if (event.event === "charge.success") {
-    const { user_id, course_id } = event.data.metadata || {};
+    const metadata = event.data.metadata || {};
+    const { user_id, course_id, tier } = metadata; // Added 'tier' support for prep/business packages
     const amountKobo = event.data.amount;
     const reference = event.data.reference;
 
-    if (!user_id || !course_id) {
+    if (!user_id) {
       return NextResponse.json(
-        { error: "Missing metadata" },
+        { error: "Missing user_id in metadata" },
         { status: 400 }
       );
     }
 
-    // Use your standard Supabase server client
     const supabase = await createServer();
 
-    // Get course price to confirm amount
+    // CASE 1: Tier-based one-time payment (e.g., Prep or Business package)
+    if (tier === "prep" || tier === "business") {
+      const updateField = tier === "prep" ? { prep_paid: true } : { business_paid: true };
+
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update(updateField)
+        .eq("id", user_id);
+
+      if (profileError) {
+        console.error("Error updating profile tier payment:", profileError);
+        return NextResponse.json({ error: "Database update failed" }, { status: 500 });
+      }
+
+      return NextResponse.json({ received: true, tier_unlocked: tier }, { status: 200 });
+    }
+
+    // CASE 2: Individual Course Enrollment Payment (Legacy / Standard)
+    if (!course_id) {
+      return NextResponse.json(
+        { error: "Missing course_id metadata" },
+        { status: 400 }
+      );
+    }
+
     const { data: course, error: courseError } = await supabase
       .from("courses")
       .select("price")
@@ -57,7 +81,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Compare amount in kobo
     const expectedAmountKobo = Number(course.price || 0) * 100;
     if (amountKobo !== expectedAmountKobo) {
       return NextResponse.json(

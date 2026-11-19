@@ -17,7 +17,7 @@ export default function AdminNewCoursePage() {
   const [fullDescription, setFullDescription] = useState("");
   const [category, setCategory] = useState("");
   const [level, setLevel] = useState("");
-  const [courseType, setCourseType] = useState("");
+  const [courseType, setCourseType] = useState("main");
   const [price, setPrice] = useState<string>("");
   const [isFree, setIsFree] = useState(false);
   const [durationWeeks, setDurationWeeks] = useState<string>("");
@@ -43,6 +43,11 @@ export default function AdminNewCoursePage() {
           .replace(/[^a-z0-9]+/g, "-")
           .replace(/^-+|-+$/g, "") || `course-${Date.now()}`;
 
+      // If free, type is 'free'. Otherwise use selected courseType.
+      const finalCourseType = isFree ? "free" : courseType;
+      // Only main paid courses require an individual price tag
+      const finalPrice = (!isFree && finalCourseType === "main") ? Number(price || 0) : 0;
+
       const { data: courseInsert, error: courseError } = await supabase
         .from("courses")
         .insert({
@@ -51,8 +56,8 @@ export default function AdminNewCoursePage() {
           full_description: fullDescription,
           category,
           level,
-          course_type: courseType,
-          price: isFree ? 0 : Number(price || 0),
+          course_type: finalCourseType,
+          price: finalPrice,
           is_free: isFree,
           duration_weeks: durationWeeks ? Number(durationWeeks) : null,
           status,
@@ -147,62 +152,59 @@ export default function AdminNewCoursePage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* same sidebar + layout as Manage Courses */}
+    <div className="flex min-h-screen bg-gray-50 font-sans">
       <Sidebar role="admin" />
 
       <div className="flex-1 lg:ml-64 p-6 lg:p-10">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-[#512d7c]">
+            <h1 className="text-3xl font-black text-[#512d7c] tracking-tight">
               Create New Course
             </h1>
-            <p className="text-sm text-gray-600 mt-1">
-              Define course basics, learning outcomes, and syllabus.
+            <p className="text-sm font-medium text-slate-600 mt-1">
+              Define course basics, learning outcomes, tier assignment, and syllabus.
             </p>
           </div>
         </div>
 
-        {/* Form */}
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-2xl shadow p-6 space-y-8 max-w-4xl"
+          className="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-6 space-y-8 max-w-4xl text-left"
         >
           {error && (
-            <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+            <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-xs font-bold text-red-700">
               {error}
             </div>
           )}
 
           {/* BASIC INFO */}
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-4">
               Basic Information
             </h2>
             <div className="grid gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
                   Course title
                 </label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
+                  className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
                   placeholder="e.g. Full-Stack Web Development with Next.js"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
                   Short description
                 </label>
                 <textarea
                   value={shortDescription}
                   onChange={(e) => setShortDescription(e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
+                  className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
                   rows={2}
                   placeholder="One or two lines that describe the course."
                   required
@@ -210,13 +212,13 @@ export default function AdminNewCoursePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
                   Full description
                 </label>
                 <textarea
                   value={fullDescription}
                   onChange={(e) => setFullDescription(e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
+                  className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
                   rows={4}
                   placeholder="Explain who this course is for, what will be covered, and any prerequisites."
                 />
@@ -224,26 +226,26 @@ export default function AdminNewCoursePage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
                     Category
                   </label>
                   <input
                     type="text"
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
+                    className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
                     placeholder="e.g. Programming, Design"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
                     Level
                   </label>
                   <select
                     value={level}
                     onChange={(e) => setLevel(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white focus:border-[#512d7c] focus:ring-[#512d7c]"
+                    className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm bg-white focus:border-[#512d7c] focus:ring-[#512d7c]"
                   >
                     <option value="">Select level</option>
                     <option value="beginner">Beginner</option>
@@ -254,19 +256,27 @@ export default function AdminNewCoursePage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Course type
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
+                    Course type (Tier)
                   </label>
                   <select
-                    value={courseType}
+                    value={isFree ? "free" : courseType}
+                    disabled={isFree}
                     onChange={(e) => setCourseType(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white focus:border-[#512d7c] focus:ring-[#512d7c]"
+                    className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm bg-white focus:border-[#512d7c] focus:ring-[#512d7c] disabled:bg-slate-100 disabled:text-slate-500"
+                    required
                   >
-                    <option value="">Select type</option>
-                    <option value="self-paced">Self-paced</option>
-                    <option value="cohort-based">Cohort-based</option>
-                    <option value="live">Live</option>
+                    <option value="">Select tier type</option>
+                    <option value="free">Free (Onboarding Library)</option>
+                    <option value="prep">Prep (Foundational)</option>
+                    <option value="business">Business</option>
+                    <option value="main">Main (Advance)</option>
                   </select>
+                  {isFree && (
+                    <span className="text-[10px] font-bold text-emerald-600 mt-1 block">
+                      ℹ️ Free courses automatically route to Free Resources.
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -274,33 +284,39 @@ export default function AdminNewCoursePage() {
 
           {/* PRICING & STATUS */}
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Pricing & Status
+            <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider mb-4">
+              Pricing &amp; Status
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
                   Is this course free?
                 </label>
                 <div className="mt-2 flex items-center gap-3">
                   <button
                     type="button"
-                    onClick={() => setIsFree(true)}
-                    className={`px-3 py-1.5 text-sm rounded-full border ${
+                    onClick={() => {
+                      setIsFree(true);
+                      setCourseType("free");
+                    }}
+                    className={`px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl border transition ${
                       isFree
-                        ? "bg-green-50 border-green-500 text-green-700"
-                        : "bg-white border-gray-300 text-gray-700"
+                        ? "bg-emerald-50 border-emerald-500 text-emerald-700 shadow-2xs"
+                        : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
                     }`}
                   >
                     Yes, free
                   </button>
                   <button
                     type="button"
-                    onClick={() => setIsFree(false)}
-                    className={`px-3 py-1.5 text-sm rounded-full border ${
+                    onClick={() => {
+                      setIsFree(false);
+                      if (courseType === "free") setCourseType("main");
+                    }}
+                    className={`px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl border transition ${
                       !isFree
-                        ? "bg-purple-50 border-[#512d7c] text-[#512d7c]"
-                        : "bg-white border-gray-300 text-gray-700"
+                        ? "bg-purple-50 border-[#512d7c] text-[#512d7c] shadow-2xs"
+                        : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
                     }`}
                   >
                     No, paid
@@ -308,16 +324,17 @@ export default function AdminNewCoursePage() {
                 </div>
               </div>
 
-              {!isFree && (
+              {/* Price input ONLY shows for Main paid courses */}
+              {!isFree && courseType === "main" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
                     Price (NGN)
                   </label>
                   <input
                     type="number"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
+                    className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
                     min="0"
                     step="1"
                     placeholder="e.g. 50000"
@@ -325,15 +342,22 @@ export default function AdminNewCoursePage() {
                 </div>
               )}
 
+              {/* Informational notice for Prep & Business fixed bundles */}
+              {!isFree && (courseType === "prep" || courseType === "business") && (
+                <div className="p-3 bg-purple-50/60 rounded-xl border border-purple-100 text-xs text-[#512d7c] font-medium">
+                  💡 This is a fixed bundle tier ({courseType === "prep" ? "₦75k Prep" : "₦100k Business"}). Individual course pricing is not required.
+                </div>
+              )}
+
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
                   Duration (weeks)
                 </label>
                 <input
                   type="number"
                   value={durationWeeks}
                   onChange={(e) => setDurationWeeks(e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
+                  className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
                   min="0"
                   step="1"
                   placeholder="e.g. 8"
@@ -341,7 +365,7 @@ export default function AdminNewCoursePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
                   Status
                 </label>
                 <select
@@ -349,7 +373,7 @@ export default function AdminNewCoursePage() {
                   onChange={(e) =>
                     setStatus(e.target.value as "draft" | "published")
                   }
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white focus:border-[#512d7c] focus:ring-[#512d7c]"
+                  className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm bg-white focus:border-[#512d7c] focus:ring-[#512d7c]"
                 >
                   <option value="draft">Draft</option>
                   <option value="published">Published</option>
@@ -361,25 +385,24 @@ export default function AdminNewCoursePage() {
           {/* LEARNING OUTCOMES */}
           <section>
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider">
                 Learning Outcomes
               </h2>
               <button
                 type="button"
                 onClick={handleAddOutcome}
-                className="text-sm text-[#512d7c] hover:underline"
+                className="text-xs font-black uppercase tracking-wider text-[#512d7c] hover:underline cursor-pointer"
               >
                 + Add outcome
               </button>
             </div>
-            <p className="text-xs text-gray-500 mb-3">
-              List what students will be able to do or understand after
-              completing this course.
+            <p className="text-xs font-medium text-slate-500 mb-3">
+              List what students will be able to do or understand after completing this course.
             </p>
             <div className="space-y-3">
               {outcomes.map((outcome, index) => (
                 <div key={outcome.id} className="flex gap-2 items-start">
-                  <span className="mt-2 text-xs text-gray-500">
+                  <span className="mt-3 text-xs font-bold text-slate-400">
                     {index + 1}.
                   </span>
                   <textarea
@@ -387,7 +410,7 @@ export default function AdminNewCoursePage() {
                     onChange={(e) =>
                       handleOutcomeChange(outcome.id, e.target.value)
                     }
-                    className="flex-1 mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
+                    className="flex-1 mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
                     rows={2}
                     placeholder="e.g. Build and deploy a full-stack web application using Next.js and Supabase."
                   />
@@ -399,32 +422,32 @@ export default function AdminNewCoursePage() {
           {/* MODULES / SYLLABUS */}
           <section>
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider">
                 Course Modules / Syllabus
               </h2>
               <button
                 type="button"
                 onClick={handleAddModule}
-                className="text-sm text-[#512d7c] hover:underline"
+                className="text-xs font-black uppercase tracking-wider text-[#512d7c] hover:underline cursor-pointer"
               >
                 + Add module
               </button>
             </div>
-            <p className="text-xs text-gray-500 mb-3">
+            <p className="text-xs font-medium text-slate-500 mb-3">
               Outline the main sections or modules in this course.
             </p>
             <div className="space-y-4">
               {modules.map((module, index) => (
                 <div
                   key={module.id}
-                  className="rounded-xl border border-gray-200 p-4 space-y-3 bg-gray-50"
+                  className="rounded-2xl border border-slate-200 p-4 space-y-3 bg-slate-50/60"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white border text-xs text-gray-600">
+                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white border border-slate-200 text-xs font-bold text-slate-700">
                         {index + 1}
                       </span>
-                      <span className="text-sm font-medium text-gray-800">
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-800">
                         Module {index + 1}
                       </span>
                     </div>
@@ -432,7 +455,7 @@ export default function AdminNewCoursePage() {
 
                   <div className="grid gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-gray-700">
+                      <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
                         Module title
                       </label>
                       <input
@@ -441,12 +464,12 @@ export default function AdminNewCoursePage() {
                         onChange={(e) =>
                           handleModuleChange(module.id, "title", e.target.value)
                         }
-                        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
+                        className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm bg-white focus:border-[#512d7c] focus:ring-[#512d7c]"
                         placeholder="e.g. Introduction to Next.js"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700">
+                      <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
                         Summary (optional)
                       </label>
                       <textarea
@@ -458,7 +481,7 @@ export default function AdminNewCoursePage() {
                             e.target.value
                           )
                         }
-                        className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
+                        className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm bg-white focus:border-[#512d7c] focus:ring-[#512d7c]"
                         rows={2}
                         placeholder="Briefly describe what is covered in this module."
                       />
@@ -470,15 +493,15 @@ export default function AdminNewCoursePage() {
           </section>
 
           {/* ACTIONS */}
-          <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-            <p className="text-xs text-gray-500">
+          <div className="flex items-center justify-between pt-6 border-t border-slate-100">
+            <p className="text-xs font-medium text-slate-400">
               You can always edit this course later from the admin panel.
             </p>
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={() => router.push("/dashboard/admin/courses")}
-                className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+                className="px-5 py-2.5 text-xs font-black uppercase tracking-widest rounded-xl border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 transition cursor-pointer"
                 disabled={saving}
               >
                 Cancel
@@ -486,9 +509,9 @@ export default function AdminNewCoursePage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="px-4 py-2 text-sm rounded-lg bg-[#512d7c] text-white hover:bg-[#3f2160] disabled:opacity-60 disabled:cursor-not-allowed"
+                className="px-5 py-2.5 text-xs font-black uppercase tracking-widest rounded-xl bg-[#512d7c] text-white hover:bg-[#3f2160] transition disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer shadow-sm"
               >
-                {saving ? "Saving..." : "Create course"}
+                {saving ? "Creating Course..." : "Create Course"}
               </button>
             </div>
           </div>

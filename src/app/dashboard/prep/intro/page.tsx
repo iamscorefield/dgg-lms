@@ -9,7 +9,7 @@ export default function PrepIntroPage() {
   const [loading, setLoading] = useState(false);
   const role: "student" | "tutor" | "admin" = "student";
 
-  // 🔥 FIXED: Updated to align exactly with image_d0d85d.png foundational modules
+  // Streamlined to the 4 Core Prep Tracks
   const prepCourses = [
     { 
       id: "01", 
@@ -30,26 +30,6 @@ export default function PrepIntroPage() {
       id: "04", 
       title: "Introduction to No-Code Tools & Building Your First App or Website", 
       desc: "Design responsive visual wireframes and deploy functional web applications without writing raw code lines." 
-    },
-    { 
-      id: "05", 
-      title: "Cybersecurity Fundamentals: Understanding Cybersecurity Basics", 
-      desc: "Protect sensitive user accounts, master encryption protocols, and avoid standard online vulnerability traps." 
-    },
-    { 
-      id: "06", 
-      title: "Introduction to Artificial Intelligence (AI)", 
-      desc: "Harness advanced prompt engineering patterns to automate complex creative workflows and research cycles." 
-    },
-    { 
-      id: "07", 
-      title: "Get To Know Legal Registration of Business in Nigeria", 
-      desc: "Navigate Corporate Affairs Commission (CAC) legal frameworks to register businesses and establish corporate structures legally." 
-    },
-    { 
-      id: "08", 
-      title: "Digital Monetization – Secure Online Opportunities...", 
-      desc: "Build optimized freelance marketplace channels, create bidding loops, and configure international payment pipelines securely." 
     }
   ];
 
@@ -74,7 +54,7 @@ export default function PrepIntroPage() {
         return;
       }
 
-      const amount = 75000; // 🔥 PRESERVED: Your verified 75k structural token pricing setting
+      const amount = 75000; // Verified 75k structural token pricing setting
       const handler = (window as any).PaystackPop.setup({
         key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
         email,
@@ -152,7 +132,7 @@ export default function PrepIntroPage() {
                 </div>
               </div>
               <p className="mt-4 text-xs font-medium text-slate-400 leading-relaxed italic border-t border-slate-200/60 pt-3">
-                Inside this operational briefing, your instructors map out module milestones, platform execution tools, and explain exactly how these 8 foundational paths launch your journey.
+                Inside this operational briefing, your instructors map out module milestones, platform execution tools, and explain exactly how these 4 core foundational paths launch your journey.
               </p>
             </div>
 
@@ -180,11 +160,11 @@ export default function PrepIntroPage() {
                 </div>
 
                 <p className="text-xs font-medium text-slate-500 leading-relaxed mb-5">
-                  Unlock permanent unthrottled access clearance into our 8 foundational modules with zero future subscription rates.
+                  Unlock permanent unthrottled access clearance into our 4 core foundational modules with zero future subscription rates.
                 </p>
 
                 <ul className="text-xs font-bold text-slate-600 space-y-2.5 mb-6 border-t border-b border-slate-200/60 py-4">
-                  <li className="flex items-center gap-2.5"><span className="text-emerald-500 text-sm">✓</span> Access to 8 Core Prep Disciplines</li>
+                  <li className="flex items-center gap-2.5"><span className="text-emerald-500 text-sm">✓</span> Access to 4 Core Prep Disciplines</li>
                   <li className="flex items-center gap-2.5"><span className="text-emerald-500 text-sm">✓</span> Step-by-Step Practical Blueprint Sequence</li>
                   <li className="flex items-center gap-2.5"><span className="text-emerald-500 text-sm">✓</span> Real-world Project Portfolios &amp; Monetization</li>
                   <li className="flex items-center gap-2.5"><span className="text-emerald-500 text-sm">✓</span> Direct Technical Support Loops</li>
@@ -208,11 +188,11 @@ export default function PrepIntroPage() {
 
           </section>
 
-          {/* 📚 Complete 8 Prep Course Cards Grid Layout */}
+          {/* 📚 Complete 4 Prep Course Cards Grid Layout */}
           <section className="mb-10 text-left">
             <div className="mb-6">
               <h2 className="text-base font-black text-slate-900 uppercase tracking-wide flex items-center gap-2">
-                <span>📖</span> Included Foundational Modules (8 Core Tracks)
+                <span>📖</span> Included Foundational Modules (4 Core Tracks)
               </h2>
               <p className="text-xs font-medium text-slate-400 mt-0.5">
                 Each node is structured sequentially with structured learning resources, real objectives, and custom mentor review gates.
@@ -263,7 +243,7 @@ export default function PrepIntroPage() {
                 <span className="absolute top-3 right-4 font-mono font-black text-slate-100 group-hover:text-[#f2b42c]/10 text-3xl transition-colors">03</span>
                 <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 text-[11px] font-black text-[#f2b42c]">3</span>
                 <p className="font-bold text-slate-800 text-sm mt-1">Execute Roadmap</p>
-                <p className="text-slate-400 font-medium leading-relaxed">Tackle the 8 core structured curriculum modules sequentially using custom learning sandboxes.</p>
+                <p className="text-slate-400 font-medium leading-relaxed">Tackle the 4 core structured curriculum modules sequentially using custom learning sandboxes.</p>
               </div>
 
               <div className="flex flex-col gap-2 p-4 bg-white rounded-2xl border border-slate-200/60 relative group hover:shadow-2xs transition-all">
@@ -283,7 +263,7 @@ export default function PrepIntroPage() {
               Ready to unlock your permanent developer clearance?
             </h2>
             <p className="text-xs font-medium text-purple-200 max-w-lg mx-auto mb-5 leading-relaxed">
-              Join your DGG Academy peers today and launch through your 8 core courses with elite support loops.
+              Join your DGG Academy peers today and launch through your 4 core courses with elite support loops.
             </p>
             <button
               type="button"

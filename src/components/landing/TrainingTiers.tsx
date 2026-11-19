@@ -5,29 +5,29 @@ import React from "react";
 const pathwayStages = [
   {
     step: "01",
-    stageName: "Stage 1: The Technical & Operational Foundation",
-    durationLabel: "Months 1 – 3 (12 Weeks)",
-    title: "Digital Literacy & Structural Workflows",
-    description: "Establish complete confidence by mastering the digital systems, cloud architectures, and asynchronous tools used across modern remote corporate workspaces. This module ensures all students, regardless of their final career path, can navigate professional tech ecosystems and leverage AI workflows efficiently.",
-    skills: ["Digital Systems", "Cloud Workspace Hubs", "Professional Communications", "AI Workflow Automation", "Prompt Architecture"],
+    stageName: "Stage 1: The Prep & Foundational Track",
+    durationLabel: "Immediate Onboarding",
+    title: "Digital Literacy & Core System Readiness",
+    description: "Establish complete confidence by mastering foundational computer operations, hardware/software basics, and browser settings. Designed as our essential free onboarding track to orient every new learner into the DGG ecosystem.",
+    skills: ["Computer Basics", "Hardware & Software", "Browser Setup", "Tech Journey Intro", "Digital Safety"],
     accentColor: "border-[#512d7c]"
   },
   {
     step: "02",
-    stageName: "Stage 2: Core Specialization Sprints",
-    durationLabel: "Months 4 – 6 (12 Weeks)",
-    title: "High-Demand Professional Execution",
-    description: "Diverge into your premium chosen industry module tier. This intensive sprint block focuses on developing specialized portfolio assets, building enterprise systems, analyzing complex operational data, or crafting high-conversion digital brand assets tailored to market demands.",
-    skills: ["Software Engineering", "UI/UX Interface Systems", "Data Analytics Engine", "Digital Brand Growth", "Business Architecture"],
+    stageName: "Stage 2: The Business & Entrepreneurial Tier",
+    durationLabel: "Practical Startup Sprints",
+    title: "CAC Registration & Venture Operations",
+    description: "Master practical entrepreneurial modules tailored for Nigerian innovators. Learn step-by-step business registration with the Corporate Affairs Commission (CAC), annual returns filing, and enterprise planning with dedicated mentor oversight.",
+    skills: ["CAC Registration", "Business Planning", "Annual Returns", "Startup Operations", "Venture Growth"],
     accentColor: "border-[#f2b42c]"
   },
   {
     step: "03",
-    stageName: "Stage 3: Global Monetization Node",
-    durationLabel: "Months 7 – 12 (24 Weeks)",
-    title: "Freelance Architecture & Outreach Execution",
-    description: "Bridge the gap between specialized skills and direct revenue generation. Learn the systematic monetization frameworks required to launch personal agencies, pitch international clients across online spaces, optimize consulting loops, and master regional payment processors.",
-    skills: ["Upwork Optimization", "LinkedIn Business Outreach", "Cold Proposal Pitching", "Paystack Gateway Systems", "Portfolio Showcases"],
+    stageName: "Stage 3: The Main / Advance Professional Track",
+    durationLabel: "Advanced Execution",
+    title: "High-Demand Professional Specialization",
+    description: "Dive deep into your chosen professional industry track. Build production-grade portfolios, enterprise software systems, advanced marketing pipelines, or professional design assets tailored for remote and global employment.",
+    skills: ["Software Engineering", "UI/UX Interface Systems", "Digital Marketing", "Motion Design", "Global Freelancing"],
     accentColor: "border-slate-900"
   }
 ];
@@ -46,10 +46,10 @@ export default function TrainingTiers() {
             Syllabus Blueprint
           </span>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#512d7c] tracking-tight leading-none mb-4 uppercase">
-            Your Three-Stage Curriculum Pathway
+            Your Three-Tier Learning Architecture
           </h2>
           <p className="text-sm text-slate-400 font-medium leading-relaxed">
-            Follow a structured career timeline engineered to take you from a tech enthusiast to an industry professional, and finally into a high-earning global contractor.
+            Progress seamlessly through our structured curriculum pipeline—from foundational Prep onboarding to specialized Business entrepreneurship and advanced Main professional tracks.
           </p>
         </div>
 
@@ -70,7 +70,7 @@ export default function TrainingTiers() {
                   <div className={`md:hidden ${!isEven ? "hidden md:block" : "block"}`}>
                     <div className="pt-2 mb-2">
                       <span className="text-4xl md:text-7xl font-black text-slate-100 tracking-tighter block leading-none select-none">
-                        PHASE {stage.step}
+                        TIER {stage.step}
                       </span>
                     </div>
                   </div>
@@ -78,7 +78,7 @@ export default function TrainingTiers() {
                   {!isEven ? (
                     <div className="hidden md:block pt-2 sticky top-24">
                       <span className="text-7xl font-black text-slate-100 tracking-tighter block leading-none select-none">
-                        PHASE {stage.step}
+                        TIER {stage.step}
                       </span>
                       <span className="inline-block mt-2 px-3 py-1 bg-[#512d7c]/5 border border-[#512d7c]/10 text-[#512d7c] font-black text-[10px] tracking-wider rounded-md uppercase">
                         ⌛ {stage.durationLabel}
@@ -106,7 +106,7 @@ export default function TrainingTiers() {
                   {isEven ? (
                     <div className="hidden md:block pt-2 sticky top-24">
                       <span className="text-7xl font-black text-slate-100 tracking-tighter block leading-none select-none">
-                        PHASE {stage.step}
+                        TIER {stage.step}
                       </span>
                       <span className="inline-block mt-2 px-3 py-1 bg-[#512d7c]/5 border border-[#512d7c]/10 text-[#512d7c] font-black text-[10px] tracking-wider rounded-md uppercase">
                         ⌛ {stage.durationLabel}
@@ -132,7 +132,7 @@ export default function TrainingTiers() {
                 {/* MOBILE TIME CHIP STICKER ELEMENT */}
                 <div className="md:hidden w-full mt-3 pl-0">
                   <span className="inline-block px-3 py-1 bg-[#512d7c]/5 border border-[#512d7c]/10 text-[#512d7c] font-black text-[10px] tracking-wide rounded-md uppercase">
-                    ⌛ Term: {stage.durationLabel}
+                    ⌛ Scope: {stage.durationLabel}
                   </span>
                 </div>
 
@@ -147,7 +147,7 @@ export default function TrainingTiers() {
             href="/signup"
             className="inline-block px-10 py-4 bg-[#f2b42c] text-black font-black text-xs uppercase tracking-widest rounded-xl hover:bg-[#e0a51a] hover:scale-[1.02] transition-all shadow-md decoration-none border-0 cursor-pointer"
           >
-            Enroll in the Pathway Now
+            Start Your Learning Journey Now
           </a>
         </div>
 

@@ -78,17 +78,32 @@ export default function Sidebar({ role }: { role: Role }) {
                   >
                     Start Prep Journey
                   </a>
+
+                  {/* 📈 NEW BUSINESS TIER NAV LINKS */}
+                  <a
+                    href="/dashboard/business/intro"
+                    className="block py-2.5 px-4 text-[#512d7c] hover:bg-[#f2b42c]/10 rounded-lg transition"
+                  >
+                    Business Startup Intro
+                  </a>
+                  <a
+                    href="/dashboard/business"
+                    className="block py-2.5 px-4 text-[#512d7c] hover:bg-[#f2b42c]/10 rounded-lg transition"
+                  >
+                    Business Startup Journey
+                  </a>
+
                   <a
                     href="/dashboard/student/courses"
                     className="block py-2.5 px-4 text-[#512d7c] hover:bg-[#f2b42c]/10 rounded-lg transition"
                   >
-                    My Courses
+                    My Enrolled Courses
                   </a>
                   <a
                     href="/dashboard/courses"
                     className="block py-2.5 px-4 text-[#512d7c] hover:bg-[#f2b42c]/10 rounded-lg transition"
                   >
-                    Browse Courses
+                    Browse Advance Courses
                   </a>
                   <a
                     href="/dashboard/student/in-progress"
@@ -98,13 +113,22 @@ export default function Sidebar({ role }: { role: Role }) {
                     <span className="text-[9px] font-mono bg-purple-100 text-[#512d7c] px-1.5 py-0.5 rounded font-bold">LIVE</span>
                   </a>
                   
-                  {/* 🌟 NEW SELF-TRAFFICKING LEARNING CALENDAR SLIDER LINK */}
+                  {/* 🌟 LEARNING SCHEDULE MATRIX */}
                   <a
                     href="/dashboard/student/schedule"
                     className="block py-2.5 px-4 text-[#512d7c] hover:bg-[#f2b42c]/10 rounded-lg transition flex items-center justify-between border border-dashed border-purple-200/60 bg-purple-50/30"
                   >
                     <span>Learning Schedule Matrix</span>
                     <span className="text-[9px] font-mono bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold">NEW</span>
+                  </a>
+
+                  {/* 🎁 NEW FREE RESOURCES LIBRARY LINK */}
+                  <a
+                    href="/dashboard/free-resources"
+                    className="block py-2.5 px-4 text-[#512d7c] hover:bg-[#f2b42c]/10 rounded-lg transition flex items-center justify-between"
+                  >
+                    <span>Free Resources</span>
+                    <span className="text-[9px] font-mono bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-bold">FREE</span>
                   </a>
 
                   <a
