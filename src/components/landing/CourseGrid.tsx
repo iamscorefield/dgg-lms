@@ -27,6 +27,9 @@ export interface CourseItem {
   learning_outcomes?: string[];
   modules?: CourseModuleItem[];
   featured_order?: number;
+  basic_price?: number | null;
+  standard_price?: number | null;
+  advance_price?: number | null;
 }
 
 const TRACK_TABS: { key: TrackKey; label: string }[] = [
@@ -288,16 +291,16 @@ const REAL_CATALOG_FALLBACK: CourseItem[] = [
     featured_order: 6,
   },
 
-  // ADVANCE SKILLS / MAIN COURSE (2 featured in ALL)
+  // ADVANCE SKILLS / MAIN COURSE (2 featured in ALL — 7-module tiered structure)
   {
     id: 'adv-full-stack-systems',
     title: 'Full-Stack Web & Cloud Systems Engineering',
     track: 'ADVANCE_SKILLS',
-    level: 'Advance Skills',
+    level: 'Advance Skills • 7 Modules',
     short_description:
       'Architect, build, and deploy modern web applications, relational databases, and APIs with production-grade workflows.',
     full_description:
-      'Hands-on engineering track focused on building reliable web platforms, database schemas, authentication, and real-world deployment pipelines.',
+      'Hands-on engineering track focused on building reliable web platforms, database schemas, authentication, and real-world deployment pipelines across 7 structured modules.',
     learning_outcomes: [
       'Design relational schemas and APIs for real applications.',
       'Build responsive interfaces with clean state and data flow.',
@@ -312,18 +315,33 @@ const REAL_CATALOG_FALLBACK: CourseItem[] = [
       },
       {
         module_number: 2,
-        title: 'Relational Databases & API Design',
-        summary: 'Model data cleanly and expose reliable endpoints.',
+        title: 'Responsive UI Systems & Component Engineering',
+        summary: 'Build clean, accessible interfaces with Tailwind CSS and React.',
       },
       {
         module_number: 3,
-        title: 'Authentication, Security & Data Integrity',
-        summary: 'Protect routes, sessions, and database records.',
+        title: 'Relational Databases & Schema Modeling',
+        summary: 'Design tables, relationships, and queries cleanly.',
       },
       {
         module_number: 4,
-        title: 'Production Deployment & Performance',
-        summary: 'Ship, test, and maintain live applications.',
+        title: 'Server Actions, REST APIs & Data Validation',
+        summary: 'Expose reliable endpoints and validate inputs safely.',
+      },
+      {
+        module_number: 5,
+        title: 'Authentication, Role Gating & Security',
+        summary: 'Protect routes, sessions, and database records.',
+      },
+      {
+        module_number: 6,
+        title: 'Payments, Webhooks & Third-Party Integrations',
+        summary: 'Integrate external APIs and asynchronous webhook events.',
+      },
+      {
+        module_number: 7,
+        title: 'Production Deployment, Performance & Capstone',
+        summary: 'Ship, monitor, and defend a full production platform.',
       },
     ],
     featured_order: 7,
@@ -332,11 +350,11 @@ const REAL_CATALOG_FALLBACK: CourseItem[] = [
     id: 'adv-data-automation-ops',
     title: 'Applied Data Analytics, Reporting & Workflow Automation',
     track: 'ADVANCE_SKILLS',
-    level: 'Advance Skills',
+    level: 'Advance Skills • 7 Modules',
     short_description:
       'Turn raw operational data into clear dashboards, automated workflows, and actionable decision reports for modern organizations.',
     full_description:
-      'Practical skills track for turning spreadsheets, databases, and operational logs into structured metrics and automated reporting systems.',
+      'Practical 7-module skills track for turning spreadsheets, databases, and operational logs into structured metrics and automated reporting systems.',
     learning_outcomes: [
       'Clean, structure, and audit raw operational datasets.',
       'Build clear KPI trackers and decision summaries.',
@@ -346,23 +364,38 @@ const REAL_CATALOG_FALLBACK: CourseItem[] = [
     modules: [
       {
         module_number: 1,
-        title: 'Data Cleaning & Structured Reporting',
-        summary: 'Standardize messy records into reliable tables.',
+        title: 'Data Literacy & Spreadsheet Audit Foundations',
+        summary: 'Standardize messy records into reliable structured tables.',
       },
       {
         module_number: 2,
-        title: 'Metrics, Dashboards & Decision Frameworks',
-        summary: 'Track key metrics and build clear visual summaries.',
+        title: 'Formulas, Lookups & Operational Data Cleaning',
+        summary: 'Master lookup functions, validation rules, and error checks.',
       },
       {
         module_number: 3,
-        title: 'Workflow & Reporting Automation',
-        summary: 'Reduce manual repetitive steps with repeatable workflows.',
+        title: 'SQL Querying & Relational Data Extraction',
+        summary: 'Query, filter, and join multi-table business datasets.',
       },
       {
         module_number: 4,
-        title: 'Capstone Operational Analytics Project',
-        summary: 'Deliver a complete end-to-end reporting solution.',
+        title: 'KPI Frameworks & Interactive Dashboards',
+        summary: 'Track key metrics and build clear visual summaries.',
+      },
+      {
+        module_number: 5,
+        title: 'Automated Reporting & Workflow Pipelines',
+        summary: 'Reduce manual repetitive steps with repeatable workflows.',
+      },
+      {
+        module_number: 6,
+        title: 'Executive Storytelling & Decision Memos',
+        summary: 'Translate analytical findings into clear business recommendations.',
+      },
+      {
+        module_number: 7,
+        title: 'Capstone End-to-End Business Intelligence Project',
+        summary: 'Deliver a complete operational analytics dashboard and report.',
       },
     ],
     featured_order: 8,
@@ -422,12 +455,35 @@ function getEnrollmentConfig(track: CourseItem['track']): {
       };
     case 'ADVANCE_SKILLS':
       return {
-        badge: 'MAIN COURSE ENROLLMENT',
-        notice: 'Create your account to enroll in this Advance Skills course and start learning.',
+        badge: 'TIERED MASTER COURSE',
+        notice:
+          'Choose Basic (Modules 1–2), Standard (Modules 1–4), or Advance (All 7 Modules) when you sign up.',
         buttonText: 'SIGN UP TO ENROLL →',
         href: '/signup?track=advance-skills',
       };
   }
+}
+
+function getMainModuleTierLabel(moduleIdxZeroBased: number): {
+  label: string;
+  classes: string;
+} {
+  if (moduleIdxZeroBased < 2) {
+    return {
+      label: 'Basic • Standard • Advance',
+      classes: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    };
+  }
+  if (moduleIdxZeroBased < 4) {
+    return {
+      label: 'Standard • Advance',
+      classes: 'bg-amber-50 text-amber-800 border-amber-200',
+    };
+  }
+  return {
+    label: 'Advance Only',
+    classes: 'bg-purple-50 text-[#512d7c] border-purple-200',
+  };
 }
 
 export default function CourseGrid() {
@@ -487,6 +543,14 @@ export default function CourseGrid() {
             learning_outcomes: parsedOutcomes,
             modules: parsedModules,
             featured_order: typeof row.featured_order === 'number' ? row.featured_order : idx + 1,
+            basic_price:
+              row.basic_price != null
+                ? Number(row.basic_price)
+                : row.price != null
+                ? Number(row.price)
+                : null,
+            standard_price: row.standard_price != null ? Number(row.standard_price) : null,
+            advance_price: row.advance_price != null ? Number(row.advance_price) : null,
           };
         });
 
@@ -523,6 +587,7 @@ export default function CourseGrid() {
   }, [activeTab, courses]);
 
   const selectedEnrollment = selectedCourse ? getEnrollmentConfig(selectedCourse.track) : null;
+  const isSelectedMainCourse = selectedCourse?.track === 'ADVANCE_SKILLS';
 
   return (
     <section className="w-full bg-white py-16 px-4 sm:px-6 lg:px-8">
@@ -624,7 +689,7 @@ export default function CourseGrid() {
             onClick={() => setSelectedCourse(null)}
           >
             <div
-              className="relative max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 sm:p-8 shadow-2xl border border-slate-200"
+              className="relative max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 sm:p-8 shadow-2xl border border-slate-200"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
@@ -680,26 +745,138 @@ export default function CourseGrid() {
                   </div>
                 )}
 
+                {/* 3 TIER OPTIONS RIGHT BELOW OUTCOMES FOR ADVANCE SKILLS (MAIN) COURSES */}
+                {isSelectedMainCourse && (
+                  <div>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-3">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-[#512d7c]">
+                        CHOOSE YOUR ENROLLMENT TIER
+                      </h4>
+                      <span className="text-xs font-medium text-slate-500">
+                        Unlock more modules anytime as you progress
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                      {[
+                        {
+                          key: 'basic',
+                          name: 'Basic',
+                          price: selectedCourse.basic_price,
+                          modulesLabel: 'Unlocks Modules 1–2',
+                          summary: 'Foundational concepts and starter hands-on exercises.',
+                          featured: false,
+                        },
+                        {
+                          key: 'standard',
+                          name: 'Standard',
+                          price: selectedCourse.standard_price,
+                          modulesLabel: 'Unlocks Modules 1–4',
+                          summary: 'Includes Basic + intermediate workflows and practical labs.',
+                          featured: true,
+                        },
+                        {
+                          key: 'advance',
+                          name: 'Advance',
+                          price: selectedCourse.advance_price,
+                          modulesLabel: 'Unlocks All 7 Modules (1–7)',
+                          summary: 'Complete mastery access including capstone project.',
+                          featured: false,
+                        },
+                      ].map((tier) => (
+                        <div
+                          key={tier.key}
+                          className={`rounded-xl border p-4 flex flex-col justify-between ${
+                            tier.featured
+                              ? 'border-[#512d7c] bg-[#512d7c]/[0.04] shadow-sm'
+                              : 'border-slate-200 bg-white'
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs font-extrabold uppercase tracking-wider text-[#512d7c]">
+                                {tier.name}
+                              </span>
+                              {tier.featured && (
+                                <span className="rounded bg-[#f2b42c] px-2 py-0.5 text-[9px] font-extrabold uppercase text-black">
+                                  Popular
+                                </span>
+                              )}
+                            </div>
+
+                            {tier.price && tier.price > 0 ? (
+                              <p className="mt-2 text-lg font-extrabold text-slate-900">
+                                ₦{tier.price.toLocaleString()}
+                              </p>
+                            ) : (
+                              <p className="mt-2 text-xs font-bold text-slate-500">
+                                Tiered Enrollment
+                              </p>
+                            )}
+
+                            <p className="mt-2 inline-block rounded bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[11px] font-bold text-emerald-800">
+                              {tier.modulesLabel}
+                            </p>
+
+                            <p className="mt-2 text-xs text-slate-600 leading-relaxed">
+                              {tier.summary}
+                            </p>
+                          </div>
+
+                          <Link
+                            href={`/signup?track=advance-skills&tier=${tier.key}&course=${encodeURIComponent(
+                              selectedCourse.title
+                            )}`}
+                            onClick={() => setSelectedCourse(null)}
+                            className={`mt-4 inline-flex items-center justify-center rounded-lg px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider transition ${
+                              tier.featured
+                                ? 'bg-[#512d7c] hover:bg-[#3f2162] text-white'
+                                : 'bg-[#f2b42c] hover:bg-[#e0a51a] text-black'
+                            }`}
+                          >
+                            Sign Up ({tier.name}) →
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {selectedCourse.modules && selectedCourse.modules.length > 0 && (
                   <div>
                     <h4 className="text-xs font-bold uppercase tracking-wider text-[#512d7c]">
                       COURSE SYLLABUS ({selectedCourse.modules.length} MODULES)
                     </h4>
                     <div className="mt-2.5 space-y-2">
-                      {selectedCourse.modules.map((mod, idx) => (
-                        <div
-                          key={idx}
-                          className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3"
-                        >
-                          <p className="text-[11px] font-bold uppercase tracking-wider text-[#512d7c]">
-                            MODULE {mod.module_number ?? idx + 1}
-                          </p>
-                          <p className="mt-0.5 text-sm font-bold text-slate-900">{mod.title}</p>
-                          {mod.summary && (
-                            <p className="mt-1 text-xs text-slate-600">{mod.summary}</p>
-                          )}
-                        </div>
-                      ))}
+                      {selectedCourse.modules.map((mod, idx) => {
+                        const moduleTierBadge = isSelectedMainCourse
+                          ? getMainModuleTierLabel(idx)
+                          : null;
+
+                        return (
+                          <div
+                            key={idx}
+                            className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3"
+                          >
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <p className="text-[11px] font-bold uppercase tracking-wider text-[#512d7c]">
+                                MODULE {mod.module_number ?? idx + 1}
+                              </p>
+                              {moduleTierBadge && (
+                                <span
+                                  className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${moduleTierBadge.classes}`}
+                                >
+                                  {moduleTierBadge.label}
+                                </span>
+                              )}
+                            </div>
+                            <p className="mt-0.5 text-sm font-bold text-slate-900">{mod.title}</p>
+                            {mod.summary && (
+                              <p className="mt-1 text-xs text-slate-600">{mod.summary}</p>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

@@ -9,6 +9,28 @@ import { createBrowser } from "@/lib/supabase-client";
 type Outcome = { id: number; text: string; dbId?: number };
 type Module = { id: number; title: string; summary: string; dbId?: number };
 
+function getMainModuleTierBadge(moduleIndexZeroBased: number): {
+  label: string;
+  classes: string;
+} {
+  if (moduleIndexZeroBased < 2) {
+    return {
+      label: "Basic (Modules 1–2)",
+      classes: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    };
+  }
+  if (moduleIndexZeroBased < 4) {
+    return {
+      label: "Standard (Modules 1–4)",
+      classes: "bg-amber-50 text-amber-800 border-amber-200",
+    };
+  }
+  return {
+    label: "Advance Only (Modules 5–7)",
+    classes: "bg-purple-50 text-[#512d7c] border-purple-200",
+  };
+}
+
 export default function AdminEditCoursePage() {
   const router = useRouter();
   const params = useParams();
@@ -26,13 +48,20 @@ export default function AdminEditCoursePage() {
   const [category, setCategory] = useState("");
   const [level, setLevel] = useState("");
   const [courseType, setCourseType] = useState("");
+
   const [price, setPrice] = useState<string>("");
+  const [basicPrice, setBasicPrice] = useState<string>("");
+  const [standardPrice, setStandardPrice] = useState<string>("");
+  const [advancePrice, setAdvancePrice] = useState<string>("");
+
   const [isFree, setIsFree] = useState(false);
   const [durationWeeks, setDurationWeeks] = useState<string>("");
   const [status, setStatus] = useState<"draft" | "published">("draft");
 
   const [outcomes, setOutcomes] = useState<Outcome[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
+
+  const isMainPaid = !isFree && courseType === "main";
 
   useEffect(() => {
     async function loadCourse() {
@@ -41,28 +70,55 @@ export default function AdminEditCoursePage() {
       setError(null);
 
       try {
-        const { data: course, error: courseError } = await supabase
+        let course: Record<string, any> | null = null;
+
+        const { data: fullRow, error: fullError } = await supabase
           .from("courses")
           .select(
-            "id, title, short_description, full_description, category, level, course_type, price, is_free, duration_weeks, status"
+            "id, title, short_description, full_description, category, level, course_type, price, basic_price, standard_price, advance_price, is_free, duration_weeks, status"
           )
           .eq("id", courseId)
           .single();
 
-        if (courseError || !course) {
-          console.error(courseError);
-          throw new Error("Course not found");
+        if (fullError || !fullRow) {
+          const { data: baseRow, error: baseError } = await supabase
+            .from("courses")
+            .select(
+              "id, title, short_description, full_description, category, level, course_type, price, is_free, duration_weeks, status"
+            )
+            .eq("id", courseId)
+            .single();
+
+          if (baseError || !baseRow) {
+            console.error(baseError || fullError);
+            throw new Error("Course not found");
+          }
+          course = baseRow;
+        } else {
+          course = fullRow;
         }
+
+        const loadedIsFree = !!course.is_free;
+        const loadedType = course.course_type || "";
+        const basePriceVal =
+          !loadedIsFree && course.price != null ? String(course.price) : "";
 
         setTitle(course.title || "");
         setShortDescription(course.short_description || "");
         setFullDescription(course.full_description || "");
         setCategory(course.category || "");
         setLevel(course.level || "");
-        setCourseType(course.course_type || "");
-        setIsFree(!!course.is_free);
-        setPrice(
-          !course.is_free && course.price != null ? String(course.price) : ""
+        setCourseType(loadedType);
+        setIsFree(loadedIsFree);
+        setPrice(basePriceVal);
+        setBasicPrice(
+          course.basic_price != null ? String(course.basic_price) : basePriceVal
+        );
+        setStandardPrice(
+          course.standard_price != null ? String(course.standard_price) : ""
+        );
+        setAdvancePrice(
+          course.advance_price != null ? String(course.advance_price) : ""
         );
         setDurationWeeks(
           course.duration_weeks != null ? String(course.duration_weeks) : ""
@@ -131,25 +187,37 @@ export default function AdminEditCoursePage() {
     setError(null);
 
     try {
-      // If free, type is 'free'. Otherwise use selected courseType.
       const finalCourseType = isFree ? "free" : courseType;
-      // Only main paid courses require an individual price tag
-      const finalPrice = (!isFree && finalCourseType === "main") ? Number(price || 0) : 0;
+      const mainPaidNow = !isFree && finalCourseType === "main";
+
+      const parsedBasic = Number(basicPrice || price || 0);
+      const parsedStandard = Number(standardPrice || 0);
+      const parsedAdvance = Number(advancePrice || 0);
+
+      const finalPrice = mainPaidNow ? parsedBasic : 0;
+
+      const updatePayload: Record<string, unknown> = {
+        title,
+        short_description: shortDescription,
+        full_description: fullDescription,
+        category,
+        level,
+        course_type: finalCourseType,
+        price: finalPrice,
+        is_free: isFree,
+        duration_weeks: durationWeeks ? Number(durationWeeks) : null,
+        status,
+      };
+
+      if (mainPaidNow) {
+        updatePayload.basic_price = parsedBasic;
+        updatePayload.standard_price = parsedStandard;
+        updatePayload.advance_price = parsedAdvance;
+      }
 
       const { error: updateError } = await supabase
         .from("courses")
-        .update({
-          title,
-          short_description: shortDescription,
-          full_description: fullDescription,
-          category,
-          level,
-          course_type: finalCourseType,
-          price: finalPrice,
-          is_free: isFree,
-          duration_weeks: durationWeeks ? Number(durationWeeks) : null,
-          status,
-        })
+        .update(updatePayload)
         .eq("id", courseId);
 
       if (updateError) {
@@ -240,8 +308,26 @@ export default function AdminEditCoursePage() {
   function handleAddModule() {
     setModules((prev) => [
       ...prev,
-      { id: prev.length ? prev[prev.length - 1].id + 1 : 1, title: "", summary: "" },
+      {
+        id: prev.length ? prev[prev.length - 1].id + 1 : 1,
+        title: "",
+        summary: "",
+      },
     ]);
+  }
+
+  function handleExpandToSevenModules() {
+    setModules((prev) => {
+      if (prev.length >= 7) return prev;
+      const next = [...prev];
+      let nextId = next.length
+        ? Math.max(...next.map((m) => m.id)) + 1
+        : 1;
+      while (next.length < 7) {
+        next.push({ id: nextId++, title: "", summary: "" });
+      }
+      return next;
+    });
   }
 
   function handleModuleChange(
@@ -259,7 +345,9 @@ export default function AdminEditCoursePage() {
       <div className="flex min-h-screen bg-gray-50 font-sans">
         <Sidebar role="admin" />
         <div className="flex-1 lg:ml-64 p-6 lg:p-10">
-          <p className="text-sm font-medium text-slate-600">Loading course details...</p>
+          <p className="text-sm font-medium text-slate-600">
+            Loading course details...
+          </p>
         </div>
       </div>
     );
@@ -272,7 +360,9 @@ export default function AdminEditCoursePage() {
       <div className="flex-1 lg:ml-64 p-6 lg:p-10">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-black text-[#512d7c] tracking-tight">Edit Course</h1>
+            <h1 className="text-3xl font-black text-[#512d7c] tracking-tight">
+              Edit Course
+            </h1>
             <p className="text-sm font-medium text-slate-600 mt-1">
               Update course details, learning outcomes, tier assignment, and syllabus.
             </p>
@@ -407,7 +497,7 @@ export default function AdminEditCoursePage() {
                       setIsFree(true);
                       setCourseType("free");
                     }}
-                    className={`px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl border transition ${
+                    className={`px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl border transition cursor-pointer ${
                       isFree
                         ? "bg-emerald-50 border-emerald-500 text-emerald-700 shadow-2xs"
                         : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
@@ -421,7 +511,7 @@ export default function AdminEditCoursePage() {
                       setIsFree(false);
                       if (courseType === "free") setCourseType("main");
                     }}
-                    className={`px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl border transition ${
+                    className={`px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl border transition cursor-pointer ${
                       !isFree
                         ? "bg-purple-50 border-[#512d7c] text-[#512d7c] shadow-2xs"
                         : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
@@ -431,31 +521,6 @@ export default function AdminEditCoursePage() {
                   </button>
                 </div>
               </div>
-
-              {/* Price input ONLY shows for Main paid courses */}
-              {!isFree && courseType === "main" && (
-                <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
-                    Price (NGN)
-                  </label>
-                  <input
-                    type="number"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
-                    min="0"
-                    step="1"
-                    placeholder="e.g. 50000"
-                  />
-                </div>
-              )}
-
-              {/* Informational notice for Prep & Business fixed bundles */}
-              {!isFree && (courseType === "prep" || courseType === "business") && (
-                <div className="p-3 bg-purple-50/60 rounded-xl border border-purple-100 text-xs text-[#512d7c] font-medium">
-                  💡 This is a fixed bundle tier ({courseType === "prep" ? "₦75k Prep" : "₦100k Business"}). Individual course pricing is not required.
-                </div>
-              )}
 
               <div>
                 <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
@@ -487,6 +552,77 @@ export default function AdminEditCoursePage() {
                 </select>
               </div>
             </div>
+
+            {/* 3-TIER PRICING ONLY FOR MAIN PAID COURSES */}
+            {isMainPaid && (
+              <div className="mt-5 rounded-2xl border border-purple-200/80 bg-purple-50/40 p-4 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                  <p className="text-xs font-black uppercase tracking-wider text-[#512d7c]">
+                    Main Course Tier Pricing (NGN)
+                  </p>
+                  <span className="text-[11px] font-medium text-slate-600">
+                    Basic = Modules 1–2 • Standard = Modules 1–4 • Advance = All 7 Modules
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
+                      Basic Price (NGN)
+                    </label>
+                    <input
+                      type="number"
+                      value={basicPrice || price}
+                      onChange={(e) => {
+                        setBasicPrice(e.target.value);
+                        setPrice(e.target.value);
+                      }}
+                      className="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
+                      min="0"
+                      step="1"
+                      placeholder="e.g. 50000"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
+                      Standard Price (NGN)
+                    </label>
+                    <input
+                      type="number"
+                      value={standardPrice}
+                      onChange={(e) => setStandardPrice(e.target.value)}
+                      className="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
+                      min="0"
+                      step="1"
+                      placeholder="e.g. 95000"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
+                      Advance Price (NGN)
+                    </label>
+                    <input
+                      type="number"
+                      value={advancePrice}
+                      onChange={(e) => setAdvancePrice(e.target.value)}
+                      className="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
+                      min="0"
+                      step="1"
+                      placeholder="e.g. 175000"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Informational notice for Prep & Business fixed bundles */}
+            {!isFree && (courseType === "prep" || courseType === "business") && (
+              <div className="mt-4 p-3 bg-purple-50/60 rounded-xl border border-purple-100 text-xs text-[#512d7c] font-medium">
+                💡 This is a fixed bundle tier ({courseType === "prep" ? "₦75k Prep" : "₦100k Business"}). Individual course pricing is not required.
+              </div>
+            )}
           </section>
 
           {/* LEARNING OUTCOMES */}
@@ -527,85 +663,114 @@ export default function AdminEditCoursePage() {
 
           {/* MODULES / SYLLABUS */}
           <section>
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
               <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider">
                 Course Modules / Syllabus
               </h2>
-              <button
-                type="button"
-                onClick={handleAddModule}
-                className="text-xs font-black uppercase tracking-wider text-[#512d7c] hover:underline cursor-pointer"
-              >
-                + Add module
-              </button>
+              <div className="flex items-center gap-4">
+                {isMainPaid && modules.length < 7 && (
+                  <button
+                    type="button"
+                    onClick={handleExpandToSevenModules}
+                    className="text-xs font-black uppercase tracking-wider text-amber-700 hover:underline cursor-pointer"
+                  >
+                    + Fill Up to 7 Modules
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={handleAddModule}
+                  className="text-xs font-black uppercase tracking-wider text-[#512d7c] hover:underline cursor-pointer"
+                >
+                  + Add module
+                </button>
+              </div>
             </div>
             <p className="text-xs font-medium text-slate-500 mb-3">
-              Update the main sections or modules in this course.
+              {isMainPaid
+                ? "For Main courses, Modules 1–2 unlock on Basic, Modules 1–4 on Standard, and Modules 1–7 on Advance."
+                : "Update the main sections or modules in this course."}
             </p>
             <div className="space-y-4">
-              {modules.map((module, index) => (
-                <div
-                  key={module.id}
-                  className="rounded-2xl border border-slate-200 p-4 space-y-3 bg-slate-50/60"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white border border-slate-200 text-xs font-bold text-slate-700">
-                        {index + 1}
-                      </span>
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-800">
-                        Module {index + 1}
-                      </span>
+              {modules.map((module, index) => {
+                const tierBadge = isMainPaid
+                  ? getMainModuleTierBadge(index)
+                  : null;
+
+                return (
+                  <div
+                    key={module.id}
+                    className="rounded-2xl border border-slate-200 p-4 space-y-3 bg-slate-50/60"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white border border-slate-200 text-xs font-bold text-slate-700">
+                          {index + 1}
+                        </span>
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-800">
+                          Module {index + 1}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        {tierBadge && (
+                          <span
+                            className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${tierBadge.classes}`}
+                          >
+                            {tierBadge.label}
+                          </span>
+                        )}
+
+                        {module.dbId && (
+                          <Link
+                            href={`/dashboard/admin/modules/${module.dbId}`}
+                            className="text-xs font-black uppercase tracking-wider px-3 py-1.5 rounded-xl border border-slate-300 text-slate-700 bg-white hover:bg-slate-100 transition shadow-2xs"
+                          >
+                            Manage lessons &amp; assessments
+                          </Link>
+                        )}
+                      </div>
                     </div>
 
-                    {module.dbId && (
-                      <Link
-                        href={`/dashboard/admin/modules/${module.dbId}`}
-                        className="text-xs font-black uppercase tracking-wider px-3 py-1.5 rounded-xl border border-slate-300 text-slate-700 bg-white hover:bg-slate-100 transition shadow-2xs"
-                      >
-                        Manage lessons &amp; assessments
-                      </Link>
-                    )}
-                  </div>
-
-                  <div className="grid gap-3">
-                    <div>
-                      <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
-                        Module title
-                      </label>
-                      <input
-                        type="text"
-                        value={module.title}
-                        onChange={(e) =>
-                          handleModuleChange(
-                            module.id,
-                            "title",
-                            e.target.value
-                          )
-                        }
-                        className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm bg-white focus:border-[#512d7c] focus:ring-[#512d7c]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
-                        Summary (optional)
-                      </label>
-                      <textarea
-                        value={module.summary}
-                        onChange={(e) =>
-                          handleModuleChange(
-                            module.id,
-                            "summary",
-                            e.target.value
-                          )
-                        }
-                        className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm bg-white focus:border-[#512d7c] focus:ring-[#512d7c]"
-                        rows={2}
-                      />
+                    <div className="grid gap-3">
+                      <div>
+                        <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
+                          Module title
+                        </label>
+                        <input
+                          type="text"
+                          value={module.title}
+                          onChange={(e) =>
+                            handleModuleChange(
+                              module.id,
+                              "title",
+                              e.target.value
+                            )
+                          }
+                          className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm bg-white focus:border-[#512d7c] focus:ring-[#512d7c]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
+                          Summary (optional)
+                        </label>
+                        <textarea
+                          value={module.summary}
+                          onChange={(e) =>
+                            handleModuleChange(
+                              module.id,
+                              "summary",
+                              e.target.value
+                            )
+                          }
+                          className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm bg-white focus:border-[#512d7c] focus:ring-[#512d7c]"
+                          rows={2}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
 

@@ -8,6 +8,38 @@ import { createBrowser } from "@/lib/supabase-client";
 type Outcome = { id: number; text: string };
 type Module = { id: number; title: string; summary: string };
 
+const MAIN_SEVEN_MODULES_TEMPLATE: Module[] = [
+  { id: 1, title: "", summary: "" },
+  { id: 2, title: "", summary: "" },
+  { id: 3, title: "", summary: "" },
+  { id: 4, title: "", summary: "" },
+  { id: 5, title: "", summary: "" },
+  { id: 6, title: "", summary: "" },
+  { id: 7, title: "", summary: "" },
+];
+
+function getMainModuleTierBadge(moduleIndexZeroBased: number): {
+  label: string;
+  classes: string;
+} {
+  if (moduleIndexZeroBased < 2) {
+    return {
+      label: "Basic (Modules 1–2)",
+      classes: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    };
+  }
+  if (moduleIndexZeroBased < 4) {
+    return {
+      label: "Standard (Modules 1–4)",
+      classes: "bg-amber-50 text-amber-800 border-amber-200",
+    };
+  }
+  return {
+    label: "Advance Only (Modules 5–7)",
+    classes: "bg-purple-50 text-[#512d7c] border-purple-200",
+  };
+}
+
 export default function AdminNewCoursePage() {
   const router = useRouter();
   const supabase = createBrowser();
@@ -18,7 +50,13 @@ export default function AdminNewCoursePage() {
   const [category, setCategory] = useState("");
   const [level, setLevel] = useState("");
   const [courseType, setCourseType] = useState("main");
+
+  // Single price kept for backward compatibility; 3-tier prices used for "main" paid courses
   const [price, setPrice] = useState<string>("");
+  const [basicPrice, setBasicPrice] = useState<string>("");
+  const [standardPrice, setStandardPrice] = useState<string>("");
+  const [advancePrice, setAdvancePrice] = useState<string>("");
+
   const [isFree, setIsFree] = useState(false);
   const [durationWeeks, setDurationWeeks] = useState<string>("");
   const [status, setStatus] = useState<"draft" | "published">("draft");
@@ -30,6 +68,8 @@ export default function AdminNewCoursePage() {
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isMainPaid = !isFree && courseType === "main";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -43,27 +83,38 @@ export default function AdminNewCoursePage() {
           .replace(/[^a-z0-9]+/g, "-")
           .replace(/^-+|-+$/g, "") || `course-${Date.now()}`;
 
-      // If free, type is 'free'. Otherwise use selected courseType.
       const finalCourseType = isFree ? "free" : courseType;
-      // Only main paid courses require an individual price tag
-      const finalPrice = (!isFree && finalCourseType === "main") ? Number(price || 0) : 0;
+
+      const parsedBasic = Number(basicPrice || price || 0);
+      const parsedStandard = Number(standardPrice || 0);
+      const parsedAdvance = Number(advancePrice || 0);
+
+      const finalPrice = isMainPaid ? parsedBasic : 0;
+
+      const coursePayload: Record<string, unknown> = {
+        title,
+        short_description: shortDescription,
+        full_description: fullDescription,
+        category,
+        level,
+        course_type: finalCourseType,
+        price: finalPrice,
+        is_free: isFree,
+        duration_weeks: durationWeeks ? Number(durationWeeks) : null,
+        status,
+        is_featured: false,
+        slug: slugBase,
+      };
+
+      if (isMainPaid) {
+        coursePayload.basic_price = parsedBasic;
+        coursePayload.standard_price = parsedStandard;
+        coursePayload.advance_price = parsedAdvance;
+      }
 
       const { data: courseInsert, error: courseError } = await supabase
         .from("courses")
-        .insert({
-          title,
-          short_description: shortDescription,
-          full_description: fullDescription,
-          category,
-          level,
-          course_type: finalCourseType,
-          price: finalPrice,
-          is_free: isFree,
-          duration_weeks: durationWeeks ? Number(durationWeeks) : null,
-          status,
-          is_featured: false,
-          slug: slugBase,
-        })
+        .insert(coursePayload)
         .select("id")
         .single();
 
@@ -137,8 +188,16 @@ export default function AdminNewCoursePage() {
   function handleAddModule() {
     setModules((prev) => [
       ...prev,
-      { id: prev.length ? prev[prev.length - 1].id + 1 : 1, title: "", summary: "" },
+      {
+        id: prev.length ? prev[prev.length - 1].id + 1 : 1,
+        title: "",
+        summary: "",
+      },
     ]);
+  }
+
+  function handleSeedSevenModules() {
+    setModules(MAIN_SEVEN_MODULES_TEMPLATE.map((m, idx) => ({ ...m, id: idx + 1 })));
   }
 
   function handleModuleChange(
@@ -192,7 +251,7 @@ export default function AdminNewCoursePage() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
-                  placeholder="e.g. Full-Stack Web Development with Next.js"
+                  placeholder="e.g. Data Analytics & Business Intelligence"
                   required
                 />
               </div>
@@ -234,7 +293,7 @@ export default function AdminNewCoursePage() {
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
                     className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
-                    placeholder="e.g. Programming, Design"
+                    placeholder="e.g. Data, Programming"
                   />
                 </div>
 
@@ -299,7 +358,7 @@ export default function AdminNewCoursePage() {
                       setIsFree(true);
                       setCourseType("free");
                     }}
-                    className={`px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl border transition ${
+                    className={`px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl border transition cursor-pointer ${
                       isFree
                         ? "bg-emerald-50 border-emerald-500 text-emerald-700 shadow-2xs"
                         : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
@@ -313,7 +372,7 @@ export default function AdminNewCoursePage() {
                       setIsFree(false);
                       if (courseType === "free") setCourseType("main");
                     }}
-                    className={`px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl border transition ${
+                    className={`px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl border transition cursor-pointer ${
                       !isFree
                         ? "bg-purple-50 border-[#512d7c] text-[#512d7c] shadow-2xs"
                         : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
@@ -323,31 +382,6 @@ export default function AdminNewCoursePage() {
                   </button>
                 </div>
               </div>
-
-              {/* Price input ONLY shows for Main paid courses */}
-              {!isFree && courseType === "main" && (
-                <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
-                    Price (NGN)
-                  </label>
-                  <input
-                    type="number"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
-                    min="0"
-                    step="1"
-                    placeholder="e.g. 50000"
-                  />
-                </div>
-              )}
-
-              {/* Informational notice for Prep & Business fixed bundles */}
-              {!isFree && (courseType === "prep" || courseType === "business") && (
-                <div className="p-3 bg-purple-50/60 rounded-xl border border-purple-100 text-xs text-[#512d7c] font-medium">
-                  💡 This is a fixed bundle tier ({courseType === "prep" ? "₦75k Prep" : "₦100k Business"}). Individual course pricing is not required.
-                </div>
-              )}
 
               <div>
                 <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
@@ -380,6 +414,77 @@ export default function AdminNewCoursePage() {
                 </select>
               </div>
             </div>
+
+            {/* 3-TIER PRICING ONLY FOR MAIN PAID COURSES */}
+            {isMainPaid && (
+              <div className="mt-5 rounded-2xl border border-purple-200/80 bg-purple-50/40 p-4 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                  <p className="text-xs font-black uppercase tracking-wider text-[#512d7c]">
+                    Main Course Tier Pricing (NGN)
+                  </p>
+                  <span className="text-[11px] font-medium text-slate-600">
+                    Basic = Modules 1–2 • Standard = Modules 1–4 • Advance = All 7 Modules
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
+                      Basic Price (NGN)
+                    </label>
+                    <input
+                      type="number"
+                      value={basicPrice || price}
+                      onChange={(e) => {
+                        setBasicPrice(e.target.value);
+                        setPrice(e.target.value);
+                      }}
+                      className="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
+                      min="0"
+                      step="1"
+                      placeholder="e.g. 50000"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
+                      Standard Price (NGN)
+                    </label>
+                    <input
+                      type="number"
+                      value={standardPrice}
+                      onChange={(e) => setStandardPrice(e.target.value)}
+                      className="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
+                      min="0"
+                      step="1"
+                      placeholder="e.g. 95000"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
+                      Advance Price (NGN)
+                    </label>
+                    <input
+                      type="number"
+                      value={advancePrice}
+                      onChange={(e) => setAdvancePrice(e.target.value)}
+                      className="mt-1 block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
+                      min="0"
+                      step="1"
+                      placeholder="e.g. 175000"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Informational notice for Prep & Business fixed bundles */}
+            {!isFree && (courseType === "prep" || courseType === "business") && (
+              <div className="mt-4 p-3 bg-purple-50/60 rounded-xl border border-purple-100 text-xs text-[#512d7c] font-medium">
+                💡 This is a fixed bundle tier ({courseType === "prep" ? "₦75k Prep" : "₦100k Business"}). Individual course pricing is not required.
+              </div>
+            )}
           </section>
 
           {/* LEARNING OUTCOMES */}
@@ -412,7 +517,7 @@ export default function AdminNewCoursePage() {
                     }
                     className="flex-1 mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-[#512d7c] focus:ring-[#512d7c]"
                     rows={2}
-                    placeholder="e.g. Build and deploy a full-stack web application using Next.js and Supabase."
+                    placeholder="e.g. Clean, analyze, and visualize business datasets with confidence."
                   />
                 </div>
               ))}
@@ -421,74 +526,101 @@ export default function AdminNewCoursePage() {
 
           {/* MODULES / SYLLABUS */}
           <section>
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
               <h2 className="text-sm font-black text-slate-900 uppercase tracking-wider">
                 Course Modules / Syllabus
               </h2>
-              <button
-                type="button"
-                onClick={handleAddModule}
-                className="text-xs font-black uppercase tracking-wider text-[#512d7c] hover:underline cursor-pointer"
-              >
-                + Add module
-              </button>
+              <div className="flex items-center gap-4">
+                {isMainPaid && (
+                  <button
+                    type="button"
+                    onClick={handleSeedSevenModules}
+                    className="text-xs font-black uppercase tracking-wider text-amber-700 hover:underline cursor-pointer"
+                  >
+                    + Use 7-Module Template
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={handleAddModule}
+                  className="text-xs font-black uppercase tracking-wider text-[#512d7c] hover:underline cursor-pointer"
+                >
+                  + Add module
+                </button>
+              </div>
             </div>
             <p className="text-xs font-medium text-slate-500 mb-3">
-              Outline the main sections or modules in this course.
+              {isMainPaid
+                ? "For Main courses, Modules 1–2 unlock on Basic, Modules 1–4 on Standard, and Modules 1–7 on Advance."
+                : "Outline the main sections or modules in this course."}
             </p>
             <div className="space-y-4">
-              {modules.map((module, index) => (
-                <div
-                  key={module.id}
-                  className="rounded-2xl border border-slate-200 p-4 space-y-3 bg-slate-50/60"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white border border-slate-200 text-xs font-bold text-slate-700">
-                        {index + 1}
-                      </span>
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-800">
-                        Module {index + 1}
-                      </span>
-                    </div>
-                  </div>
+              {modules.map((module, index) => {
+                const tierBadge = isMainPaid
+                  ? getMainModuleTierBadge(index)
+                  : null;
 
-                  <div className="grid gap-3">
-                    <div>
-                      <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
-                        Module title
-                      </label>
-                      <input
-                        type="text"
-                        value={module.title}
-                        onChange={(e) =>
-                          handleModuleChange(module.id, "title", e.target.value)
-                        }
-                        className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm bg-white focus:border-[#512d7c] focus:ring-[#512d7c]"
-                        placeholder="e.g. Introduction to Next.js"
-                      />
+                return (
+                  <div
+                    key={module.id}
+                    className="rounded-2xl border border-slate-200 p-4 space-y-3 bg-slate-50/60"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white border border-slate-200 text-xs font-bold text-slate-700">
+                          {index + 1}
+                        </span>
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-800">
+                          Module {index + 1}
+                        </span>
+                      </div>
+
+                      {tierBadge && (
+                        <span
+                          className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${tierBadge.classes}`}
+                        >
+                          {tierBadge.label}
+                        </span>
+                      )}
                     </div>
-                    <div>
-                      <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
-                        Summary (optional)
-                      </label>
-                      <textarea
-                        value={module.summary}
-                        onChange={(e) =>
-                          handleModuleChange(
-                            module.id,
-                            "summary",
-                            e.target.value
-                          )
-                        }
-                        className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm bg-white focus:border-[#512d7c] focus:ring-[#512d7c]"
-                        rows={2}
-                        placeholder="Briefly describe what is covered in this module."
-                      />
+
+                    <div className="grid gap-3">
+                      <div>
+                        <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
+                          Module title
+                        </label>
+                        <input
+                          type="text"
+                          value={module.title}
+                          onChange={(e) =>
+                            handleModuleChange(module.id, "title", e.target.value)
+                          }
+                          className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm bg-white focus:border-[#512d7c] focus:ring-[#512d7c]"
+                          placeholder={`e.g. Module ${index + 1} topic`}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1">
+                          Summary (optional)
+                        </label>
+                        <textarea
+                          value={module.summary}
+                          onChange={(e) =>
+                            handleModuleChange(
+                              module.id,
+                              "summary",
+                              e.target.value
+                            )
+                          }
+                          className="mt-1 block w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm bg-white focus:border-[#512d7c] focus:ring-[#512d7c]"
+                          rows={2}
+                          placeholder="Briefly describe what is covered in this module."
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
 

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import { createBrowser } from "@/lib/supabase-client";
-import { X } from "lucide-react";
+import { X, Lock, Unlock } from "lucide-react";
 
 type Course = {
   id: number;
@@ -15,12 +15,27 @@ type Course = {
   level: string | null;
   course_type: string | null;
   price: number | null;
+  basic_price?: number | null;
+  standard_price?: number | null;
+  advance_price?: number | null;
   is_free: boolean | null;
   status: string | null;
 };
 
 type Outcome = { id: number; text: string };
 type ModuleItem = { id: number; title: string; summary: string | null };
+
+type MainTierKey = "basic" | "standard" | "advance";
+
+type MainTierCard = {
+  key: MainTierKey;
+  name: string;
+  price: number;
+  modulesLabel: string;
+  unlockedCount: number;
+  highlight?: boolean;
+  description: string;
+};
 
 function getIconSrc(category: string | null): string {
   const cat = (category || "").toLowerCase();
@@ -42,6 +57,79 @@ function getIconSrc(category: string | null): string {
   if (cat.includes("cloud")) return "/course-icons/cloud.svg";
   if (cat.includes("business")) return "/course-icons/business.svg";
   return "/course-icons/default.svg";
+}
+
+function getMainTierOptions(course: Course, totalModules: number): MainTierCard[] {
+  const isMain = (course.course_type || "").toLowerCase() === "main";
+  if (!isMain) return [];
+
+  const basic = Number(course.basic_price ?? course.price ?? 0);
+  const standard = Number(course.standard_price ?? 0);
+  const advance = Number(course.advance_price ?? 0);
+
+  if (standard <= 0 && advance <= 0) return [];
+
+  const maxMods = totalModules > 0 ? totalModules : 7;
+
+  const tiers: MainTierCard[] = [];
+
+  if (basic > 0) {
+    tiers.push({
+      key: "basic",
+      name: "Basic Tier",
+      price: basic,
+      modulesLabel: `Modules 1 – ${Math.min(2, maxMods)} Unlocked`,
+      unlockedCount: Math.min(2, maxMods),
+      description: "Core foundation lessons and hands-on starter practice.",
+    });
+  }
+
+  if (standard > 0) {
+    tiers.push({
+      key: "standard",
+      name: "Standard Tier",
+      price: standard,
+      modulesLabel: `Modules 1 – ${Math.min(4, maxMods)} Unlocked`,
+      unlockedCount: Math.min(4, maxMods),
+      highlight: true,
+      description: "Includes Basic + intermediate workflows and deeper applied labs.",
+    });
+  }
+
+  if (advance > 0) {
+    tiers.push({
+      key: "advance",
+      name: "Advance Tier",
+      price: advance,
+      modulesLabel: `All ${maxMods} Modules Unlocked (1 – ${maxMods})`,
+      unlockedCount: maxMods,
+      description: "Full mastery access including capstone projects and advanced modules.",
+    });
+  }
+
+  return tiers;
+}
+
+function getModuleAccessBadge(moduleIndexZeroBased: number): {
+  label: string;
+  classes: string;
+} {
+  if (moduleIndexZeroBased < 2) {
+    return {
+      label: "Basic • Standard • Advance",
+      classes: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    };
+  }
+  if (moduleIndexZeroBased < 4) {
+    return {
+      label: "Standard • Advance",
+      classes: "bg-amber-50 text-amber-800 border-amber-200",
+    };
+  }
+  return {
+    label: "Advance Only",
+    classes: "bg-purple-50 text-[#512d7c] border-purple-200",
+  };
 }
 
 export default function CoursesClient({
@@ -91,7 +179,18 @@ export default function CoursesClient({
     setModules([]);
   };
 
+  const handleEnrollTier = (courseId: number, tier?: MainTierKey) => {
+    const url = tier
+      ? `/dashboard/courses/${courseId}?tier=${tier}`
+      : `/dashboard/courses/${courseId}`;
+    router.push(url);
+    closeModal();
+  };
+
   const hasCourses = initialCourses.length > 0;
+  const activeTierOptions = selectedCourse
+    ? getMainTierOptions(selectedCourse, modules.length)
+    : [];
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -108,17 +207,17 @@ export default function CoursesClient({
               Explore available courses
             </h1>
             <p className="mt-2 text-sm text-gray-600 max-w-2xl">
-              Discover practical courses designed to help you gain real skills. Filter by level, type, or investment range to find what fits you.
+              Discover practical courses designed to help you gain real skills. Choose Basic, Standard, or Advance access inside any Main course to match your goals and budget.
             </p>
           </div>
           <div className="bg-white rounded-2xl shadow p-4 w-full md:max-w-sm border border-purple-50">
             <p className="text-xs font-semibold text-gray-500 mb-2">
-              How to choose
+              How Main Course Tiers Work
             </p>
             <ul className="space-y-1.5 text-xs text-gray-600">
-              <li>• Start with beginner level if you're new to tech.</li>
-              <li>• Use price ranges to match your current budget.</li>
-              <li>• Check course type: self‑paced vs live/cohort experience.</li>
+              <li>• <strong>Basic:</strong> Unlocks Modules 1–2 to get started.</li>
+              <li>• <strong>Standard:</strong> Unlocks Modules 1–4 for deeper practice.</li>
+              <li>• <strong>Advance:</strong> Unlocks all 7 modules + full mastery.</li>
             </ul>
           </div>
         </section>
@@ -172,6 +271,7 @@ export default function CoursesClient({
                   className="w-full rounded-full border border-gray-300 px-3 py-2 text-xs bg-white focus:border-[#512d7c] focus:ring-[#512d7c]"
                 >
                   <option value="">Any type</option>
+                  <option value="main">Main (Advance)</option>
                   <option value="self-paced">Self-paced</option>
                   <option value="cohort-based">Cohort-based</option>
                   <option value="live">Live</option>
@@ -222,7 +322,7 @@ export default function CoursesClient({
               : "No courses found in this price range yet."}
           </p>
           <p className="hidden sm:block">
-            All courses here are paid; free intros live in the pre‑course area.
+            Click any course card to view outcomes and select Basic, Standard, or Advance access.
           </p>
         </section>
 
@@ -235,9 +335,17 @@ export default function CoursesClient({
           ) : (
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
               {initialCourses.map((course: Course) => {
+                const hasMultiTier =
+                  (course.course_type || "").toLowerCase() === "main" &&
+                  (Number(course.standard_price || 0) > 0 ||
+                    Number(course.advance_price || 0) > 0);
+
+                const baseAmount = Number(course.basic_price ?? course.price ?? 0);
                 const priceLabel =
-                  course.price && Number(course.price) > 0
-                    ? `₦${Number(course.price).toLocaleString()}`
+                  baseAmount > 0
+                    ? hasMultiTier
+                      ? `From ₦${baseAmount.toLocaleString()}`
+                      : `₦${baseAmount.toLocaleString()}`
                     : "Contact support";
 
                 const iconSrc = getIconSrc(course.category);
@@ -262,7 +370,7 @@ export default function CoursesClient({
                           {course.category || "General"}
                         </span>
                         <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-700 capitalize">
-                          {course.level || "All levels"}
+                          {hasMultiTier ? "3 Tiers • 7 Modules" : course.level || "All levels"}
                         </span>
                       </div>
 
@@ -281,7 +389,7 @@ export default function CoursesClient({
                         {priceLabel}
                       </span>
                       <span className="text-[11px] font-semibold text-[#f2b42c]">
-                        View details →
+                        {hasMultiTier ? "Choose tier →" : "View details →"}
                       </span>
                     </div>
                   </div>
@@ -322,7 +430,9 @@ export default function CoursesClient({
                   About this course
                 </h3>
                 <p className="text-sm font-medium text-slate-700 leading-relaxed">
-                  {selectedCourse.full_description || selectedCourse.short_description || "Comprehensive professional training module."}
+                  {selectedCourse.full_description ||
+                    selectedCourse.short_description ||
+                    "Comprehensive professional training module."}
                 </p>
               </div>
 
@@ -339,12 +449,80 @@ export default function CoursesClient({
                       </h3>
                       <ul className="grid sm:grid-cols-2 gap-2.5 text-xs font-semibold text-slate-700">
                         {outcomes.map((o) => (
-                          <li key={o.id} className="flex items-start gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                          <li
+                            key={o.id}
+                            className="flex items-start gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100"
+                          >
                             <span className="text-[#f2b42c] font-black">✓</span>
                             <span>{o.text}</span>
                           </li>
                         ))}
                       </ul>
+                    </div>
+                  )}
+
+                  {/* TIER SELECTION CARDS RIGHT BELOW OUTCOMES FOR MAIN COURSES */}
+                  {activeTierOptions.length > 0 && (
+                    <div>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-3">
+                        <h3 className="text-xs font-black text-[#512d7c] uppercase tracking-widest">
+                          Choose Your Access Tier
+                        </h3>
+                        <span className="text-[11px] font-semibold text-slate-500">
+                          Upgrade anytime as you progress
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                        {activeTierOptions.map((tier) => (
+                          <div
+                            key={tier.key}
+                            className={`rounded-2xl border p-4 flex flex-col justify-between transition ${
+                              tier.highlight
+                                ? "border-[#512d7c] bg-purple-50/40 shadow-sm"
+                                : "border-slate-200 bg-white"
+                            }`}
+                          >
+                            <div>
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-xs font-black uppercase tracking-wider text-[#512d7c]">
+                                  {tier.name}
+                                </span>
+                                {tier.highlight && (
+                                  <span className="rounded-full bg-[#f2b42c] px-2 py-0.5 text-[9px] font-black uppercase text-black">
+                                    Popular
+                                  </span>
+                                )}
+                              </div>
+
+                              <p className="mt-2 text-xl font-black text-slate-900">
+                                ₦{tier.price.toLocaleString()}
+                              </p>
+
+                              <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 border border-emerald-200 px-2.5 py-1 text-[11px] font-bold text-emerald-800">
+                                <Unlock size={12} />
+                                <span>{tier.modulesLabel}</span>
+                              </div>
+
+                              <p className="mt-2.5 text-xs text-slate-600 leading-relaxed">
+                                {tier.description}
+                              </p>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handleEnrollTier(selectedCourse.id, tier.key)}
+                              className={`mt-4 w-full py-2.5 px-3 rounded-xl text-[11px] font-black uppercase tracking-wider transition cursor-pointer border-0 ${
+                                tier.highlight
+                                  ? "bg-[#512d7c] text-white hover:bg-[#3f2160]"
+                                  : "bg-[#f2b42c] text-black hover:bg-[#e0a51a]"
+                              }`}
+                            >
+                              Enroll {tier.name.replace(" Tier", "")} →
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
 
@@ -354,17 +532,44 @@ export default function CoursesClient({
                         Course Syllabus ({modules.length} modules)
                       </h3>
                       <div className="space-y-3">
-                        {modules.map((m, idx) => (
-                          <div key={m.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200/60 flex flex-col gap-1">
-                            <span className="text-[10px] font-black uppercase tracking-wider text-[#512d7c]">
-                              Module {idx + 1}
-                            </span>
-                            <h4 className="text-sm font-bold text-slate-900">{m.title}</h4>
-                            {m.summary && (
-                              <p className="text-xs font-medium text-slate-600 mt-1">{m.summary}</p>
-                            )}
-                          </div>
-                        ))}
+                        {modules.map((m, idx) => {
+                          const accessBadge =
+                            activeTierOptions.length > 0
+                              ? getModuleAccessBadge(idx)
+                              : null;
+
+                          return (
+                            <div
+                              key={m.id}
+                              className="p-4 rounded-2xl bg-slate-50 border border-slate-200/60 flex flex-col gap-1"
+                            >
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <span className="text-[10px] font-black uppercase tracking-wider text-[#512d7c] inline-flex items-center gap-1">
+                                  {idx >= 2 && activeTierOptions.length > 0 && (
+                                    <Lock size={11} className="text-slate-400" />
+                                  )}
+                                  Module {idx + 1}
+                                </span>
+
+                                {accessBadge && (
+                                  <span
+                                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${accessBadge.classes}`}
+                                  >
+                                    {accessBadge.label}
+                                  </span>
+                                )}
+                              </div>
+                              <h4 className="text-sm font-bold text-slate-900">
+                                {m.title}
+                              </h4>
+                              {m.summary && (
+                                <p className="text-xs font-medium text-slate-600 mt-1">
+                                  {m.summary}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -372,7 +577,7 @@ export default function CoursesClient({
               )}
             </div>
 
-            {/* Modal Footer with Enrollment / Learning Routing */}
+            {/* Modal Footer */}
             <div className="p-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-4">
               <button
                 type="button"
@@ -381,16 +586,16 @@ export default function CoursesClient({
               >
                 Close
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  router.push(`/dashboard/courses/${selectedCourse.id}`);
-                  closeModal();
-                }}
-                className="px-6 py-3 text-xs font-black uppercase tracking-widest rounded-xl bg-[#512d7c] text-white hover:bg-[#3f2160] transition shadow-md cursor-pointer border-0"
-              >
-                View full details &amp; enroll →
-              </button>
+
+              {activeTierOptions.length === 0 && (
+                <button
+                  type="button"
+                  onClick={() => handleEnrollTier(selectedCourse.id)}
+                  className="px-6 py-3 text-xs font-black uppercase tracking-widest rounded-xl bg-[#512d7c] text-white hover:bg-[#3f2160] transition shadow-md cursor-pointer border-0"
+                >
+                  View full details &amp; enroll →
+                </button>
+              )}
             </div>
           </div>
         </div>

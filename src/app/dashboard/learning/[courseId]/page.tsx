@@ -9,7 +9,42 @@ type ModuleWithCounts = {
   sort_order: number | null;
   lessons_count: number;
   assessments_count: number;
+  is_locked: boolean;
+  required_tier_label: string | null;
 };
+
+type MainTier = "basic" | "standard" | "advance";
+
+function resolveUnlockedModulesCount(
+  rawTier: unknown,
+  rawUnlockedCount: unknown,
+  totalModulesCount: number
+): { tier: MainTier; unlockedCount: number } {
+  const tierStr = String(rawTier || "").toLowerCase().trim();
+  const tier: MainTier =
+    tierStr === "advance" || tierStr === "standard" || tierStr === "basic"
+      ? tierStr
+      : "basic";
+
+  const numericOverride = Number(rawUnlockedCount);
+  if (!Number.isNaN(numericOverride) && numericOverride > 0) {
+    return { tier, unlockedCount: numericOverride };
+  }
+
+  if (tier === "advance") {
+    return { tier, unlockedCount: Math.max(7, totalModulesCount) };
+  }
+  if (tier === "standard") {
+    return { tier, unlockedCount: 4 };
+  }
+  return { tier: "basic", unlockedCount: 2 };
+}
+
+function getRequiredTierLabelForModuleIndex(moduleNumberOneBased: number): string {
+  if (moduleNumberOneBased <= 2) return "Basic Tier";
+  if (moduleNumberOneBased <= 4) return "Standard Tier";
+  return "Advance Tier";
+}
 
 export default async function LearningPage(
   props: { params: Promise<{ courseId: string }> }
@@ -52,14 +87,29 @@ export default async function LearningPage(
     notFound();
   }
 
-  // 3) Check paid enrollment fallback
-  const { data: paidEnrollment } = await supabase
+  // 3) Check paid enrollment (including optional tier columns)
+  let paidEnrollment: Record<string, any> | null = null;
+
+  const tieredEnrollRes = await supabase
     .from("enrollments")
-    .select("id, payment_status")
+    .select("id, payment_status, access_tier, unlocked_modules")
     .eq("student_id", session.user.id)
     .eq("course_id", id)
     .eq("payment_status", "paid")
     .maybeSingle();
+
+  if (tieredEnrollRes.error) {
+    const basicEnrollRes = await supabase
+      .from("enrollments")
+      .select("id, payment_status")
+      .eq("student_id", session.user.id)
+      .eq("course_id", id)
+      .eq("payment_status", "paid")
+      .maybeSingle();
+    paidEnrollment = basicEnrollRes.data;
+  } else {
+    paidEnrollment = tieredEnrollRes.data;
+  }
 
   const hasPaidEnrollment = !!paidEnrollment;
 
@@ -74,7 +124,8 @@ export default async function LearningPage(
     cType.includes("free") ||
     cType.includes("resource");
 
-  // Determine access based on free status or specific course tier flags
+  const isMainTieredCourse = !isFreeCourse && !isPrecourse && !isBusiness;
+
   let hasAccess = false;
   if (isFreeCourse) {
     hasAccess = true;
@@ -107,10 +158,20 @@ export default async function LearningPage(
     console.error("Error loading modules:", modulesError);
   }
 
+  const rawModulesList = modulesData || [];
+  const { tier: activeMainTier, unlockedCount } = isMainTieredCourse
+    ? resolveUnlockedModulesCount(
+        paidEnrollment?.access_tier,
+        paidEnrollment?.unlocked_modules,
+        rawModulesList.length
+      )
+    : { tier: "advance" as MainTier, unlockedCount: rawModulesList.length };
+
   // 6) Query lesson_slides and assessment_banks using module position index ("1", "2", etc.)
   const modules: ModuleWithCounts[] = await Promise.all(
-    (modulesData || []).map(async (m: any, index: number) => {
-      const moduleNumStr = String(index + 1);
+    rawModulesList.map(async (m: any, index: number) => {
+      const moduleNumOneBased = index + 1;
+      const moduleNumStr = String(moduleNumOneBased);
 
       const [slidesRes, assessmentsRes] = await Promise.all([
         supabase
@@ -125,9 +186,14 @@ export default async function LearningPage(
           .eq("module_id", moduleNumStr),
       ]);
 
-      // Count unique lessons by lesson_number
-      const uniqueLessons = new Set((slidesRes.data || []).map((s: any) => s.lesson_number));
-      const uniqueAssessments = new Set((assessmentsRes.data || []).map((a: any) => a.lesson_number));
+      const uniqueLessons = new Set(
+        (slidesRes.data || []).map((s: any) => s.lesson_number)
+      );
+      const uniqueAssessments = new Set(
+        (assessmentsRes.data || []).map((a: any) => a.lesson_number)
+      );
+
+      const isLocked = isMainTieredCourse && moduleNumOneBased > unlockedCount;
 
       return {
         id: m.id,
@@ -136,9 +202,16 @@ export default async function LearningPage(
         sort_order: m.sort_order,
         lessons_count: uniqueLessons.size > 0 ? uniqueLessons.size : 4,
         assessments_count: uniqueAssessments.size > 0 ? uniqueAssessments.size : 4,
+        is_locked: isLocked,
+        required_tier_label: isLocked
+          ? getRequiredTierLabelForModuleIndex(moduleNumOneBased)
+          : null,
       };
     })
   );
+
+  const nextUpgradeTier: MainTier =
+    activeMainTier === "basic" ? "standard" : "advance";
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -155,8 +228,8 @@ export default async function LearningPage(
                 {course.title}
               </h1>
               <p className="text-xs text-gray-500 mt-1">
-                Select a module to open its lessons and assessments in the
-                learning viewer.
+                Select an unlocked module to open its lessons and assessments in
+                the learning viewer.
               </p>
             </div>
             <a
@@ -167,51 +240,129 @@ export default async function LearningPage(
             </a>
           </div>
 
+          {isMainTieredCourse && (
+            <div className="mb-6 rounded-2xl border border-purple-200/80 bg-white p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-2xs">
+              <div className="text-xs text-slate-700">
+                <span className="font-black uppercase tracking-wider text-[#512d7c]">
+                  Current Tier: {activeMainTier.toUpperCase()}
+                </span>{" "}
+                • Unlocked{" "}
+                <strong>
+                  {Math.min(unlockedCount, modules.length || unlockedCount)} of{" "}
+                  {modules.length || 7}
+                </strong>{" "}
+                modules.
+              </div>
+              {activeMainTier !== "advance" && (
+                <a
+                  href={`/dashboard/courses/${course.id}?upgrade=true&tier=${nextUpgradeTier}`}
+                  className="inline-flex items-center justify-center rounded-full bg-[#f2b42c] hover:bg-[#e0a51a] text-black font-black text-[11px] uppercase tracking-wider px-4 py-2 transition"
+                >
+                  Upgrade Tier →
+                </a>
+              )}
+            </div>
+          )}
+
           <div className="grid gap-4 md:grid-cols-2">
             {modules.length === 0 ? (
               <p className="text-xs text-gray-500">
                 Modules for this course are coming soon.
               </p>
             ) : (
-              modules.map((m, index) => (
-                <a
-                  key={m.id}
-                  href={`/dashboard/learning/${course.id}/${m.id}`}
-                  className="block rounded-2xl border border-gray-100 bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-start gap-3">
-                    <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-purple-50 border border-purple-100 text-[11px] font-semibold text-[#512d7c]">
-                      {index + 1}
-                    </span>
-                    <div className="flex-1">
-                      <h2 className="text-sm font-semibold text-gray-900">
-                        {m.title || `Module ${index + 1}`}
-                      </h2>
-                      {m.summary && (
-                        <p className="mt-1 text-[11px] text-gray-600">
-                          {m.summary}
-                        </p>
-                      )}
-                      <div className="mt-2 flex items-center gap-3 text-[11px] text-gray-500">
-                        <span>
-                          {m.lessons_count} lesson
-                          {m.lessons_count === 1 ? "" : "s"}
+              modules.map((m, index) => {
+                const modulePosition = index + 1;
+                const targetTierForLockedModule: MainTier =
+                  modulePosition <= 4 ? "standard" : "advance";
+
+                if (m.is_locked) {
+                  return (
+                    <div
+                      key={m.id}
+                      className="block rounded-2xl border border-slate-200 bg-slate-100/80 p-4 opacity-80"
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-white border border-slate-200 text-[11px] font-semibold text-slate-500">
+                          {modulePosition}
                         </span>
-                        <span>
-                          {m.assessments_count} assessment
-                          {m.assessments_count === 1 ? "" : "s"}
-                        </span>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <h2 className="text-sm font-semibold text-slate-700">
+                              {m.title || `Module ${modulePosition}`}
+                            </h2>
+                            <span className="rounded-full bg-purple-100 text-[#512d7c] text-[10px] font-black uppercase px-2.5 py-0.5">
+                              {m.required_tier_label || "Upgrade"}
+                            </span>
+                          </div>
+                          {m.summary && (
+                            <p className="mt-1 text-[11px] text-slate-500">
+                              {m.summary}
+                            </p>
+                          )}
+                          <div className="mt-2 flex items-center gap-3 text-[11px] text-slate-500">
+                            <span>
+                              {m.lessons_count} lesson
+                              {m.lessons_count === 1 ? "" : "s"}
+                            </span>
+                            <span>
+                              {m.assessments_count} assessment
+                              {m.assessments_count === 1 ? "" : "s"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex justify-end">
+                        <a
+                          href={`/dashboard/courses/${course.id}?upgrade=true&tier=${targetTierForLockedModule}`}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-[#512d7c] hover:underline"
+                        >
+                          Locked • Upgrade to unlock →
+                        </a>
                       </div>
                     </div>
-                  </div>
-                  <div className="mt-3 flex justify-end">
-                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#512d7c]">
-                      Go to module
-                      <span aria-hidden="true">→</span>
-                    </span>
-                  </div>
-                </a>
-              ))
+                  );
+                }
+
+                return (
+                  <a
+                    key={m.id}
+                    href={`/dashboard/learning/${course.id}/${m.id}`}
+                    className="block rounded-2xl border border-gray-100 bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-purple-50 border border-purple-100 text-[11px] font-semibold text-[#512d7c]">
+                        {modulePosition}
+                      </span>
+                      <div className="flex-1">
+                        <h2 className="text-sm font-semibold text-gray-900">
+                          {m.title || `Module ${modulePosition}`}
+                        </h2>
+                        {m.summary && (
+                          <p className="mt-1 text-[11px] text-gray-600">
+                            {m.summary}
+                          </p>
+                        )}
+                        <div className="mt-2 flex items-center gap-3 text-[11px] text-gray-500">
+                          <span>
+                            {m.lessons_count} lesson
+                            {m.lessons_count === 1 ? "" : "s"}
+                          </span>
+                          <span>
+                            {m.assessments_count} assessment
+                            {m.assessments_count === 1 ? "" : "s"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex justify-end">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-[#512d7c]">
+                        Go to module
+                        <span aria-hidden="true">→</span>
+                      </span>
+                    </div>
+                  </a>
+                );
+              })
             )}
           </div>
         </div>

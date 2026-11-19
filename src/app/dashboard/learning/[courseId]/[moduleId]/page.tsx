@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { createBrowser } from "@/lib/supabase-client";
 import Sidebar from "@/components/Sidebar";
 import toast from "react-hot-toast";
-import { Timer, ArrowLeft, ArrowRight, CheckCircle2, BookOpen, HelpCircle, ShieldCheck, FileText, Award, Play, Video, MoveHorizontal, X, Layers, GraduationCap, Copy, Check } from "lucide-react";
+import { Timer, ArrowLeft, ArrowRight, CheckCircle2, BookOpen, HelpCircle, ShieldCheck, FileText, Award, Play, Video, MoveHorizontal, X, Layers, GraduationCap, Copy, Check, Lock } from "lucide-react";
 
 type Lesson = {
   id: number;
@@ -29,6 +29,8 @@ type Assessment = {
 type CourseInfo = {
   id: string;
   title: string | null;
+  course_type?: string | null;
+  is_free?: boolean | null;
 };
 
 type ModuleInfo = {
@@ -64,6 +66,28 @@ type LessonSlide = {
   is_video_slide?: boolean;
 };
 
+type MainTier = "basic" | "standard" | "advance";
+
+function resolveMainUnlockedCount(
+  rawTier: unknown,
+  rawUnlockedCount: unknown
+): { tier: MainTier; unlockedCount: number } {
+  const tierVal = String(rawTier || "").toLowerCase().trim();
+  const tier: MainTier =
+    tierVal === "advance" || tierVal === "standard" || tierVal === "basic"
+      ? tierVal
+      : "basic";
+
+  const num = Number(rawUnlockedCount);
+  if (!Number.isNaN(num) && num > 0) {
+    return { tier, unlockedCount: num };
+  }
+
+  if (tier === "advance") return { tier, unlockedCount: 7 };
+  if (tier === "standard") return { tier, unlockedCount: 4 };
+  return { tier: "basic", unlockedCount: 2 };
+}
+
 export default function LearningModulePage() {
   const supabase = createBrowser();
   const router = useRouter();
@@ -82,6 +106,11 @@ export default function LearningModulePage() {
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string>("");
+
+  const [isModuleLockedByTier, setIsModuleLockedByTier] = useState(false);
+  const [studentMainTier, setStudentMainTier] = useState<MainTier>("basic");
+  const [studentUnlockedCount, setStudentUnlockedCount] = useState<number>(2);
+  const [modulePositionNumber, setModulePositionNumber] = useState<number>(1);
 
   const [activeTab, setActiveTab] = useState<"lesson" | "assessment">("lesson");
 
@@ -105,15 +134,15 @@ export default function LearningModulePage() {
     return moduleId ? String(moduleId) : "";
   }, [moduleId]);
 
-  // Helper function to extract a fallback simple digit string (e.g., '1') if stringModuleId is a UUID/slug
   const derivedModuleNumberString = useMemo(() => {
+    if (modulePositionNumber > 0) return String(modulePositionNumber);
     if (!moduleInfo?.title) return "1";
     const match = moduleInfo.title.match(/Module\s+(\d+)/i);
     return match ? match[1] : "1";
-  }, [moduleInfo]);
+  }, [moduleInfo, modulePositionNumber]);
 
   async function updateProgress(update: Partial<Progress>) {
-    if (!progress || !userId) return;
+    if (!progress || !userId || isModuleLockedByTier) return;
     setSaving(true);
     try {
       const { data, error: updError } = await supabase
@@ -136,6 +165,7 @@ export default function LearningModulePage() {
       if (!moduleId) return;
       setLoading(true);
       setError(null);
+      setIsModuleLockedByTier(false);
       try {
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         if (userError || !user) {
@@ -144,13 +174,17 @@ export default function LearningModulePage() {
         setUserId(user.id);
         setUserEmail(user.email || "unknown@student.dglobalgrowthfield.com");
 
+        let loadedCourse: CourseInfo | null = null;
         if (courseId) {
           const { data: courseData } = await supabase
             .from("courses")
-            .select("id, title")
+            .select("id, title, course_type, is_free")
             .eq("id", courseId)
             .maybeSingle();
-          if (courseData) setCourseInfo(courseData);
+          if (courseData) {
+            loadedCourse = courseData as CourseInfo;
+            setCourseInfo(loadedCourse);
+          }
         }
 
         const { data: moduleData, error: moduleError } = await supabase
@@ -163,9 +197,69 @@ export default function LearningModulePage() {
         }
         setModuleInfo(moduleData as unknown as ModuleInfo);
 
-        // Derive module number string (e.g., "1", "2") for querying slides/assessments
-        const matchTitle = moduleData.title ? moduleData.title.match(/Module\s+(\d+)/i) : null;
-        const modNumStr = matchTitle ? matchTitle[1] : "1";
+        // Determine module 1-based position in course_modules
+        let positionOneBased = 1;
+        if (courseId) {
+          const { data: siblingModules } = await supabase
+            .from("course_modules")
+            .select("id, sort_order")
+            .or(`course_id.eq.${courseId},course_id.eq.${String(courseId)}`)
+            .order("sort_order", { ascending: true });
+
+          if (siblingModules && siblingModules.length > 0) {
+            const foundIdx = siblingModules.findIndex(
+              (m: any) => String(m.id) === stringModuleId
+            );
+            if (foundIdx >= 0) {
+              positionOneBased = foundIdx + 1;
+            }
+          }
+        }
+        if (positionOneBased === 1 && moduleData.title) {
+          const matchTitle = moduleData.title.match(/Module\s+(\d+)/i);
+          if (matchTitle) positionOneBased = Number(matchTitle[1]);
+        }
+        setModulePositionNumber(positionOneBased);
+
+        // Check Main-course tier access for this module position
+        const cType = String(loadedCourse?.course_type || "").toLowerCase();
+        const isMainTiered =
+          !loadedCourse?.is_free &&
+          cType !== "free" &&
+          cType !== "prep" &&
+          cType !== "prep_course" &&
+          cType !== "precourse" &&
+          !cType.includes("business");
+
+        if (isMainTiered && courseId) {
+          let enrollRow: Record<string, any> | null = null;
+          const tieredRes = await supabase
+            .from("enrollments")
+            .select("access_tier, unlocked_modules")
+            .eq("student_id", user.id)
+            .eq("course_id", courseId)
+            .eq("payment_status", "paid")
+            .maybeSingle();
+
+          if (!tieredRes.error) {
+            enrollRow = tieredRes.data;
+          }
+
+          const { tier, unlockedCount } = resolveMainUnlockedCount(
+            enrollRow?.access_tier,
+            enrollRow?.unlocked_modules
+          );
+          setStudentMainTier(tier);
+          setStudentUnlockedCount(unlockedCount);
+
+          if (positionOneBased > unlockedCount) {
+            setIsModuleLockedByTier(true);
+            setLoading(false);
+            return;
+          }
+        }
+
+        const modNumStr = String(positionOneBased);
 
         // 🚀 LOAD LESSONS FROM lesson_slides (bypassing empty module_lessons table)
         const { data: slidesData } = await supabase
@@ -267,7 +361,7 @@ export default function LearningModulePage() {
   }, [assessments, progress]);
 
   async function syncEnrollmentLedger(isFinished: boolean, lessonId: string) {
-    if (!userId || !courseId) return;
+    if (!userId || !courseId || isModuleLockedByTier) return;
     
     const lessonsCount = lessons.length || 1;
     const currentIndex = progress?.current_lesson_index ?? 0;
@@ -301,6 +395,10 @@ export default function LearningModulePage() {
   };
 
   const launchInteractiveLessonSlides = async () => {
+    if (isModuleLockedByTier) {
+      toast.error("This module is locked on your current tier.");
+      return;
+    }
     setLoading(true);
     try {
       const lessonTargetNumber = (progress?.current_lesson_index ?? 0) + 1;
@@ -342,6 +440,10 @@ export default function LearningModulePage() {
   };
 
   const launchInteractiveSliderQuiz = async () => {
+    if (isModuleLockedByTier) {
+      toast.error("This module is locked on your current tier.");
+      return;
+    }
     if (!currentAssessment) return;
     setLoading(true);
     try {
@@ -479,8 +581,35 @@ export default function LearningModulePage() {
       <Sidebar role="student" />
 
       <div className="flex-1 lg:ml-64 p-3 sm:p-6 lg:p-10 w-full max-w-full overflow-x-hidden">
-        
-        {lessonActive && activeLessonSlideNode ? (
+        {isModuleLockedByTier ? (
+          <div className="w-full max-w-2xl mx-auto bg-white rounded-3xl border border-purple-200 p-6 sm:p-8 shadow-md text-left space-y-4">
+            <div className="inline-flex items-center gap-2 rounded-full bg-purple-100 text-[#512d7c] px-3 py-1 text-xs font-black uppercase">
+              <Lock size={13} /> Tier Upgrade Required
+            </div>
+            <h1 className="text-xl sm:text-2xl font-black text-[#512d7c]">
+              Module {derivedModuleNumberString} Is Locked on Your {studentMainTier.toUpperCase()} Tier
+            </h1>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Your current enrollment unlocks up to <strong>Module {studentUnlockedCount}</strong> ({studentMainTier === "basic" ? "Modules 1–2" : "Modules 1–4"}). Upgrade to {modulePositionNumber <= 4 ? "Standard or Advance" : "Advance"} to unlock Module {modulePositionNumber}.
+            </p>
+            <div className="flex flex-wrap gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => router.push(`/dashboard/learning/${courseId}`)}
+                className="px-4 py-2.5 text-xs font-black uppercase rounded-xl border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer"
+              >
+                Back to Course Modules
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push("/dashboard/courses")}
+                className="px-5 py-2.5 text-xs font-black uppercase rounded-xl bg-[#f2b42c] text-black hover:bg-[#e0a51a] cursor-pointer border-0"
+              >
+                View Upgrade Tiers →
+              </button>
+            </div>
+          </div>
+        ) : lessonActive && activeLessonSlideNode ? (
           /* --- TEXTBOOK SLIDER CONSOLE --- */
           <div className="w-full max-w-3xl mx-auto bg-white rounded-[1.5rem] sm:rounded-[2rem] border border-slate-200 overflow-hidden shadow-xl text-left transition-all duration-300 animate-fadeIn">
             <div className="bg-[#512d7c] p-4 sm:p-6 text-white flex items-start justify-between gap-4">
